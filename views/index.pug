@@ -1,0 +1,13 @@
+extends layout
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner #{user.username}
+    div.Message.Center
+      div.Title.text-center
+        h3 Welcome
+      div.NavButtons
+        a(href="/grades")
+          div.NavButton Grades
+        a(href="/logout")
+          div.NavButton Log Out

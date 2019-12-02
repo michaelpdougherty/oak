@@ -1,0 +1,35 @@
+extends layout
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner #{user.username}
+    div.Message.Center
+      //div.Details
+      - let info = user.json[index]
+      table.table
+        tr
+          th Class
+          td= info.class
+        tr
+          th Teacher
+          td= info.teacher
+        tr
+          th Semester
+          td= info.semester
+        tr
+          th Room
+          td= info.room
+        tr
+          th Average
+          td= info.average
+        tr
+          th Tardies
+          td= info.tardies
+        tr
+          th Absences
+          td= info.absences
+    div.NavButtons.CenterX
+      a(href="/grades")
+        div.NavButton Back
+      a(href="/logout")
+        div.NavButton Log Out

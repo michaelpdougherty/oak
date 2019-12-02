@@ -1,0 +1,51 @@
+extends layout
+
+block script
+  script(src="/grades.js")
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner #{user.username}
+    table.table.text-center.Center
+      thead.desktop-only
+        th Class
+        th Teacher
+        th Semester
+        th Period
+        th Room
+        th Average
+        th Absences
+        th Tardies
+      tbody.curriculum
+        - let n = 0
+        each i in user.json
+          - let redir = `redirect(${n})`
+          #user
+            if user.json[n].class == "Student Meal" || user.json[n].period[0] == "H"
+              tr(onclick=redir).medium-only
+                td= user.json[n].class
+                td.desktop-only= user.json[n].teacher
+                td.mobile-only= user.json[n].teacher.split(",")[0]
+                td.medium-only= user.json[n].semester.split("S")[1]
+                td.medium-only= user.json[n].period.split("(")[0]
+                td.medium-only= user.json[n].room
+                td= user.json[n].average
+                td.medium-only= user.json[n].absences
+                td.medium-only= user.json[n++].tardies
+            else
+              tr(onclick=redir)
+                td= user.json[n].class
+                td.desktop-only= user.json[n].teacher
+                td.mobile-only= user.json[n].teacher.split(",")[0]
+                td.medium-only= user.json[n].semester.split("S")[1]
+                td.medium-only= user.json[n].period.split("(")[0]
+                td.medium-only= user.json[n].room
+                td= user.json[n].average
+                td.medium-only= user.json[n].absences
+                td.medium-only= user.json[n++].tardies
+    //div.Message.CenterX
+    div.NavButtons.CenterX
+      a(href="/")
+        div.NavButton Home
+      a(href="/logout")
+        div.NavButton Log Out

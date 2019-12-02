@@ -1,0 +1,16 @@
+extends layout
+
+block layout-content
+  div.View.WelcomeView
+    h1(onclick="window.location='/'").Banner OAK
+    div.Message.Center
+      div.Title
+        h3 Login
+      div.Err #{err}
+      form(method="post", action="/login")
+        div.form-group
+          input(placeholder="Username", name="username", type="text").form-control
+        div.form-group
+          input(placeholder="Password", name="password", type="password").form-control
+        div.NavButtons
+          button(type="submit").NavButton Go
