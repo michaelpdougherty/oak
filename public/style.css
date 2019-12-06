@@ -73,8 +73,10 @@ a {
   justify-content: space-between;
   align-items: flex-start;
 
+
   height: 100%;
   width: 100%;
+
 
   padding: 20px;
 
@@ -89,10 +91,7 @@ a {
   justify-content: center;
   align-items: center;
 
-  /*height: 15%;*/
   width: 100%;
-
-  margin-bottom: 20px;
 
   border-radius: 5px;
 
@@ -104,6 +103,9 @@ a {
 
   border-bottom: var(--ui-shawdow-border);
   box-shadow: var(--ui-shawdow);
+
+  /* new styles */
+  margin-bottom: 10px;
 }
 
 .Message {
@@ -111,8 +113,14 @@ a {
   padding: 30px;
   border-bottom: var(--ui-shawdow-border);
   box-shadow: var(--ui-shawdow);
+
+  /* new styles */
   border-radius: 3px;
+  /*
   width: 360px;
+  position: relative;
+  bottom: 30px;
+  */
 }
 
 .Message > .Title {
@@ -120,6 +128,7 @@ a {
 }
 
 .Message > .Err {
+  /* new styles */
   color: darkred;
   margin-bottom: 15px;
 }
@@ -132,15 +141,29 @@ a {
 
 .NavButtons {
   display: flex;
-  flex-direction: column;
   width: 100%;
-  justify-content: space-around;
+
+  /* new styles */
+  justify-content: center;/*space-around;*/
+
   align-items: center;
   padding: 0 20px;
+
+  /* new styles
+  flex-direction: column;
+  */
+}
+
+.Buffer-Top {
+  /* new styles
+  margin-top: 30px;
+  */
 }
 
 .NavButton {
+  /* new style
   border-color: inherit;
+  */
 
   display: flex;
   justify-content: center;
@@ -149,8 +172,11 @@ a {
   height: 55px;
   width: 150px;
 
+  /* new styles
   margin-top: 10px;
   margin-bottom: 10px;
+  */
+  margin: 5px;
 
   background: var(--highlight);
 
@@ -166,25 +192,20 @@ a {
   box-shadow: var(--ui-shawdow);
 }
 
+/* new styles */
 .NavButtons > a:hover {
   text-decoration: none;
 }
 
+/* new styles */
 .WelcomeView {
   background: url("oak.jpg") left bottom;
   background-size: cover;
 }
 
-.LongView {
-  background: url("oak.jpg");
-  background-repeat: repeat-y;
-}
 
 .Center {
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: auto;
-  margin-top: auto;
+  margin: auto;
 }
 
 .CenterX {
@@ -192,47 +213,72 @@ a {
   margin-right: auto;
 }
 
+.flex-col {
+  flex-direction: column;
+}
+
 table {
   /*
-  margin-top: 30px;
-  margin-bottom: 30px;
-  */
   max-width: 95vw;
   overflow: hidden;
   background-color: white;
   padding: 30px;
-  border-radius: 10px;
+  */
 }
 
 td:first-child {
-  max-width: 200px;
+  /*max-width: 200px;*/
 }
 
-.curriculum tr:hover {
+.Grades tr:hover {
   cursor: pointer;
   background-color: rgba(0, 0, 0, .1)
 }
 
-/* styles for small screens */
-@media only screen and (max-width: 900px) {
-  .desktop-only {
+td:nth-child(2) {
+  max-width: 300px;
+}
+
+/* mobile styles */
+@media only screen and (min-width: 600px) {
+  .under-600px {
     display: none;
   }
 }
-
-@media only screen and (min-width: 900px) {
-  .mobile-only {
-    display: none;
-  }
-}
-
 @media only screen and (max-width: 600px) {
-  .medium-only {
+  .over-600px {
+    display: none;
+  }
+  .Grades {
+    padding: 30px;
+  }
+  td:first-child {
+    padding-right: 0;
+  }
+}
+
+/* tablet styles */
+@media only screen and (max-width: 750px) {
+  .Message {
+    max-width: 95%;
+    max-height: 75%;
+    overflow: scroll;
+  }
+}
+
+/* desktop styles */
+@media only screen and (max-width: 900px) {
+  .over-900px {
+    display: none;
+  }
+}
+@media only screen and (min-width: 900px) {
+  .under-900px {
     display: none;
   }
 }
 
-/* styles for large screens */
+/* large screen styles */
 @media only screen and (min-width: 1600px) {
   table {
     max-width: 75vw;

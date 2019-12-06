@@ -4,9 +4,11 @@ block layout-content
   div.View.WelcomeView
     h1.Banner #{user.username}
     div.Message.Center
-      //div.Details
       - let info = user.json[index]
       table.table
+        tr
+          th Period
+          td= info.period.split("(")[0]
         tr
           th Class
           td= info.class
@@ -23,12 +25,12 @@ block layout-content
           th Average
           td= info.average
         tr
-          th Tardies
-          td= info.tardies
-        tr
           th Absences
           td= info.absences
-    div.NavButtons.CenterX
+        tr
+          th Tardies
+          td= info.tardies
+    div.NavButtons
       a(href="/grades")
         div.NavButton Back
       a(href="/logout")

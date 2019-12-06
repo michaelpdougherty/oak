@@ -17,7 +17,8 @@
     "cookie-parser": "^1.4.4",
     "express-session": "^1.17.0",
     "nodemon": "^2.0.1",
-    "puppeteer": "^2.0.0"
+    "puppeteer": "^2.0.0",
+    "winston": "^3.2.1"
   },
   "dependencies": {
     "express": "^4.17.1",

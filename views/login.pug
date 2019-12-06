@@ -6,7 +6,8 @@ block layout-content
     div.Message.Center
       div.Title
         h3 Login
-      div.Err #{err}
+      if err
+        div.Err #{err}
       form(method="post", action="/login")
         div.form-group
           input(placeholder="Username", name="username", type="text").form-control

@@ -6,45 +6,40 @@ block script
 block layout-content
   div.View.WelcomeView
     h1.Banner #{user.username}
-    table.table.text-center.Center
-      thead.desktop-only
-        th Class
-        th Teacher
-        th Semester
-        th Period
-        th Room
-        th Average
-        th Absences
-        th Tardies
-      tbody.curriculum
-        - let n = 0
-        each i in user.json
-          - let redir = `redirect(${n})`
-          #user
-            if user.json[n].class == "Student Meal" || user.json[n].period[0] == "H"
-              tr(onclick=redir).medium-only
-                td= user.json[n].class
-                td.desktop-only= user.json[n].teacher
-                td.mobile-only= user.json[n].teacher.split(",")[0]
-                td.medium-only= user.json[n].semester.split("S")[1]
-                td.medium-only= user.json[n].period.split("(")[0]
-                td.medium-only= user.json[n].room
-                td= user.json[n].average
-                td.medium-only= user.json[n].absences
-                td.medium-only= user.json[n++].tardies
-            else
+    div.Message.Grades.Center
+      table.table
+        thead.over-900px
+          th.over-900px Period
+          th.over-900px Class
+          th.over-900px Teacher
+          th.over-900px Semester
+          th.over-900px Room
+          th.over-900px Average
+          th.over-900px Absences
+          th.over-900px Tardies
+        tbody
+          - let n = 0
+          each i in user.json
+            #user
+              - let redir = `redirect(${n})`
               tr(onclick=redir)
-                td= user.json[n].class
-                td.desktop-only= user.json[n].teacher
-                td.mobile-only= user.json[n].teacher.split(",")[0]
-                td.medium-only= user.json[n].semester.split("S")[1]
-                td.medium-only= user.json[n].period.split("(")[0]
-                td.medium-only= user.json[n].room
+                td= user.json[n].period.split("(")[0]
+                if user.json[n].class.split(" ")[0][1] == "S"
+                    td.over-600px= user.json[n].class.split(" ").slice(1).join(" ")
+                else
+                    td.over-600px= user.json[n].class
+                if user.json[n].class == "Student Meal"
+                  td.under-600px Lunch
+                  td.under-900px.over-600px= user.json[n].teacher.split(",")[0]
+                else
+                  td.under-900px= user.json[n].teacher.split(",")[0]
+                td.over-900px= user.json[n].teacher
+                td.over-600px= user.json[n].semester.split("S")[1]
+                td.over-600px= user.json[n].room
                 td= user.json[n].average
-                td.medium-only= user.json[n].absences
-                td.medium-only= user.json[n++].tardies
-    //div.Message.CenterX
-    div.NavButtons.CenterX
+                td.over-600px= user.json[n].absences
+                td.over-600px= user.json[n++].tardies
+    div.NavButtons
       a(href="/")
         div.NavButton Home
       a(href="/logout")
