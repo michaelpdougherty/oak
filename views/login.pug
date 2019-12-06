@@ -5,13 +5,15 @@ block layout-content
     h1(onclick="window.location='/'").Banner OAK
     div.Message.Center
       div.Title
-        h3 Login
+        h3(id="header") Login
       if err
-        div.Err #{err}
-      form(method="post", action="/login")
+        div(id="err").Err #{err}
+      form(method="post", action="/login", id="login-form")
         div.form-group
           input(placeholder="Username", name="username", type="text").form-control
         div.form-group
           input(placeholder="Password", name="password", type="password").form-control
         div.NavButtons
-          button(type="submit").NavButton Go
+          button(type="submit", id="go").NavButton Go
+
+  script(src="/login.js")

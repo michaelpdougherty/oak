@@ -8,7 +8,7 @@
   --primary: #ffffff;
   --secondary: #2a3747;
 
-  --highlight: #4b8b3b;
+  --highlight: #fa4141;
 
   --ui-shawdow: 0 2px 4px -1px rgba(0, 0, 0, 0.06),
     0 4px 5px 0 rgba(0, 0, 0, 0.06), 0 1px 10px 0 rgba(0, 0, 0, 0.08);
@@ -73,10 +73,8 @@ a {
   justify-content: space-between;
   align-items: flex-start;
 
-
   height: 100%;
   width: 100%;
-
 
   padding: 20px;
 
@@ -103,9 +101,6 @@ a {
 
   border-bottom: var(--ui-shawdow-border);
   box-shadow: var(--ui-shawdow);
-
-  /* new styles */
-  margin-bottom: 10px;
 }
 
 .Message {
@@ -113,24 +108,10 @@ a {
   padding: 30px;
   border-bottom: var(--ui-shawdow-border);
   box-shadow: var(--ui-shawdow);
-
-  /* new styles */
-  border-radius: 3px;
-  /*
-  width: 360px;
-  position: relative;
-  bottom: 30px;
-  */
 }
 
 .Message > .Title {
   padding-bottom: 20px;
-}
-
-.Message > .Err {
-  /* new styles */
-  color: darkred;
-  margin-bottom: 15px;
 }
 
 .Message > .Details {
@@ -142,41 +123,18 @@ a {
 .NavButtons {
   display: flex;
   width: 100%;
-
-  /* new styles */
-  justify-content: center;/*space-around;*/
-
+  justify-content: space-around;
   align-items: center;
   padding: 0 20px;
-
-  /* new styles
-  flex-direction: column;
-  */
-}
-
-.Buffer-Top {
-  /* new styles
-  margin-top: 30px;
-  */
 }
 
 .NavButton {
-  /* new style
-  border-color: inherit;
-  */
-
   display: flex;
   justify-content: center;
   align-items: center;
 
   height: 55px;
   width: 150px;
-
-  /* new styles
-  margin-top: 10px;
-  margin-bottom: 10px;
-  */
-  margin: 5px;
 
   background: var(--highlight);
 
@@ -188,104 +146,21 @@ a {
 
   text-transform: capitalize;
 
-  border: var(--ui-shawdow-border);
+  border-bottom: var(--ui-shawdow-border);
   box-shadow: var(--ui-shawdow);
 }
 
-/* new styles */
-.NavButtons > a:hover {
-  text-decoration: none;
-}
-
-/* new styles */
 .WelcomeView {
-  background: url("oak.jpg") left bottom;
+  background: url("food.jpg") left bottom;
   background-size: cover;
 }
 
-
-.Center {
-  margin: auto;
+.UserView {
+  background: url("https://cdn.auth0.com/blog/whatabyte/patio.png") left bottom;
+  background-size: cover;
 }
 
 .CenterX {
   margin-left: auto;
   margin-right: auto;
-}
-
-.flex-col {
-  flex-direction: column;
-}
-
-table {
-  /*
-  max-width: 95vw;
-  overflow: hidden;
-  background-color: white;
-  padding: 30px;
-  */
-}
-
-td:first-child {
-  /*max-width: 200px;*/
-}
-
-.Grades tr:hover {
-  cursor: pointer;
-  background-color: rgba(0, 0, 0, .1)
-}
-
-.Grades thead tr:hover {
-  cursor: initial;
-  background-color: initial;
-}
-
-td:nth-child(2) {
-  max-width: 300px;
-}
-
-/* mobile styles */
-@media only screen and (min-width: 600px) {
-  .under-600px {
-    display: none;
-  }
-}
-@media only screen and (max-width: 600px) {
-  .over-600px {
-    display: none;
-  }
-  .Grades {
-    padding: 30px;
-  }
-  td:first-child {
-    padding-right: 0;
-  }
-}
-
-/* tablet styles */
-@media only screen and (max-width: 750px) {
-  .Message {
-    max-width: 95%;
-    max-height: 75%;
-    overflow: scroll;
-  }
-}
-
-/* desktop styles */
-@media only screen and (max-width: 900px) {
-  .over-900px {
-    display: none;
-  }
-}
-@media only screen and (min-width: 900px) {
-  .under-900px {
-    display: none;
-  }
-}
-
-/* large screen styles */
-@media only screen and (min-width: 1600px) {
-  table {
-    max-width: 75vw;
-  }
 }

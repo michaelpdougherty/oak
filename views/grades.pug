@@ -8,7 +8,7 @@ block layout-content
     h1.Banner #{user.username}
     div.Message.Grades.Center
       table.table
-        thead.over-900px
+        thead.text-center.over-900px
           th.over-900px Period
           th.over-900px Class
           th.over-900px Teacher
@@ -17,7 +17,7 @@ block layout-content
           th.over-900px Average
           th.over-900px Absences
           th.over-900px Tardies
-        tbody
+        tbody.text-center
           - let n = 0
           each i in user.json
             #user

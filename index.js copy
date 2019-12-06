@@ -221,10 +221,9 @@ app.get("/login", (req, res) => {
   let user = req.session.user
   user = defaultUser
 
-/*
   // refresh browser
   browser = null
-  refreshBrowser().then(() => {*/
+  refreshBrowser().then(() => {
     // check for err message
     let err = req.query.err
     if (!err) {
@@ -232,7 +231,7 @@ app.get("/login", (req, res) => {
     } else {
       res.render("login", { title: "Welcome", user: user, err: err });
     }
-  //}).catch(err => { console.log(err) })
+  }).catch(err => { console.log(err) })
 })
 
 // login handler
@@ -379,6 +378,8 @@ async function auth(user) {
                         //a.push(gChild)
                         index++;
                       }
+
+
 
                       let href = gChild.attribs.href;
                       if (href) {

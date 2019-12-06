@@ -1,0 +1,18 @@
+extends layout
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner LOGIN
+    div.Message.CenterX
+      div.Title
+        h3 Welcome
+        h1 Please Log In
+      span.Details Access the WHATABYTE Team Portal
+      span.Details More Details
+    div.NavButtons
+      if isAuthenticated
+        a(href="/user")
+          div.NavButton Just dive in!
+      else
+        a(href="/login")
+          div.NavButton Log in
