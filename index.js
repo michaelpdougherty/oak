@@ -26,7 +26,8 @@ const defaultUser = {
   username: "",
   password: "",
   loggedIn: false,
-  json: {}
+  json: {},
+  loginTime: 0,
 }
 
 // create time variables
@@ -69,8 +70,28 @@ if (process.env.NODE_ENV !== 'production') {
 
 // important urls
 const loginUrl = "https://aspen.cps.edu/aspen/logon.do"
-const homeUrl = "https://aspen.cps.edu/aspen/home.do"
-const gradesUrl = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
+//const homeUrl = "https://aspen.cps.edu/aspen/home.do"
+const desktopGradesUrl = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
+const gradesExt = "list/academics.classes.list"
+const fullSiteExt = "redirect?page=fullsite"
+
+/* key names */
+const mobileKeys = [
+  "class",
+  "teacher",
+  "average"
+]
+
+const keys = [
+  "class",
+  "teacher",
+  "semester",
+  "period",
+  "room",
+  "average",
+  "absences",
+  "tardies"
+]
 
 /**
  *  App Configuration
@@ -107,11 +128,14 @@ app.use((req, res, next) => {
   next();
 });
 
+const iPhone = puppeteer.devices["iPhone 6"]
+
 // initialize puppeteer
 let browser, page
 (async () => {
   browser = await puppeteer.launch({ headless: (process.env.NODE_ENV == "production") })
   page = await browser.newPage()
+  await page.emulate(iPhone)
   await page.goto(loginUrl)
 })()
 
@@ -124,10 +148,11 @@ app.get("/", (req, res) => {
   let user = req.session.user
   // check for authentication
   if (user.loggedIn) {
-    time2 = new Date()
-    let timeElapsed = (time2 - time1) / 1000
+    if (!user.loginTime) {
+      user.loginTime = (new Date() - time1) / 1000
+    }
     // user is logged in
-    res.render("index", { title: "Home", user: user, timeElapsed: timeElapsed });
+    res.render("index", { title: "Home", user: user });
   } else {
     // redirect to login
     res.redirect("/login")
@@ -228,145 +253,90 @@ app.get("/me", (req, res) => {
 // auth/crawl function (it's a doozy)
 async function auth(user) {
   let success = 0
-  if (await page.url() != loginUrl)
-    await page.goto(loginUrl)
-  else
+  // log in
+  if (await page.url() != loginUrl) { await page.goto(loginUrl) }
+  else {
     await page.evaluate(function() {
       document.getElementById("username").value = ""
       document.getElementById("password").value = ""
     })
+  }
   await page.type('#username', user.username)
   await page.type('#password', user.password)
   await Promise.all([
-    page.click('#logonButton'),
+    page.click('input.primary.button'),
     page.waitForNavigation({ waitUntil: 'networkidle0' }),
   ]);
+
+  // determine if login succeeded
   let location = await page.url()
-  if (location == homeUrl || await location.split(";") > 1) {
-    console.log("Login successful!")
-    logger.log({
+  if (location !== loginUrl) {
+    await console.log("Login successful!")
+    await logger.log({
       level: 'info',
       message: 'User logged in',
       user: user.username,
     });
     user.loggedIn = true
+
+    // init json
+    let mobileJSON = []
+
+    // visit grades page
+    let homeUrl = await page.url()
+    let gradesUrl = homeUrl + gradesExt
     await page.goto(gradesUrl)
-
+    await page.waitForSelector(".ui-grid-row")
     let $ = await cheerio.load(await page.content());
-    let json = [];
-    //let json = user.json
-    let classLinks = [];
-
-    while (json.length < 9) {
-      await json.push({
-        class: "",
-        href: "",
-        teacher: "",
-        semester: "",
-        period: "",
-        room: "",
-        average: "",
-        absences: "",
-        tardies: ""
-      });
-    }
-
-    const keys = [
-      "class",
-      "href",
-      "teacher",
-      "semester",
-      "period",
-      "room",
-      "average",
-      "absences",
-      "tardies"
-    ];
-
-    let done = false;
-
-    // parse every td for raw characters
-    let column = -1;
-    await $("#dataGrid tr").filter(function(i, el) {
-      if (!json[column]) { json = pushRow(json) }
-      let index = 0;
-      // skip header column
-      if (column > -1) {
-        // get tr children (td's)
-        let children = this.children;
-        if (children) {
-          // get # of children and iterate over them
-          let length = children.length;
-          for (let i = 0; i < length; i++) {
-            let child = children[i];
-            if (child) {
-              // if child is td, investigate further
-              if (child.name == "td") {
-                let gChildren = child.children;
-                if (gChildren) {
-                  // get # of grandchildren and iterate over them
-                  let gLength = gChildren.length;
-                  for (let j = 0; j < gLength; j++) {
-                    let gChild = gChildren[j];
-
-                    // get class name and link
-                    if (gChild.name == "a") {
-                      let className = gChild.children[0].data;
-                      if (className) {
-                        className = trimString(className);
-                        json[column][keys[index]] = className;
-                        index++;
-                      }
-
-                      let href = gChild.attribs.href;
-                      if (href) {
-                        json[column][keys[index]] = href;
-                        index++;
-                        classLinks.push(`a[href="${href}"]`)
-                      }
-                    }
-                    // eliminate whitespace in data
-                    let data = gChild.data;
-                    if (data) {
-                      data = data.trim();
-                      if (data) {
-                        json[column][keys[index]] = data;
-                        index++;
-                      } else if ((json[column]["class"] == "Student Meal" && (index == 2 || (index >= 6 && index <= 8))) || (json[column]["period"][0] == "H" && keys[index] == "average") ) {
-                          index++;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+    let row = 0, index = 0
+    await $(".ui-grid-row").each(function(i, el) {
+      index = 0
+      mobileJSON.push({})
+      let gridRow = $(this)
+      $(".ui-grid-cell", gridRow).each(function(i, el) {
+        let cell = $(this)
+        let data = trimString(cell.text())
+        if (index == 2) {
+          data = data.split(" ")[0]
         }
-      }
-      column++;
-    });
-
-
-    /*
-    / Get individual class details
-    */
-    /*
-    for (let i = 0; i < classLinks.length; i++) {
-      // click a page link
-      await Promise.all([
-        page.click(classLinks[i]),
-        page.waitForNavigation({ waitUntil: 'networkidle0' })
-      ])
-      $ = await cheerio.load(await page.content())
-      await $(".detailValue").filter(function(index, el) {
-        //console.log(this)
-        if (index == 5) {
-          json[i].average = this.children[0].data.trim().trim().trim().split(" ")[0]
-        }
+        mobileJSON[row][mobileKeys[index]] = data
+        index++
       })
-      await page.goto(gradesUrl)
+      row++
+    })
+
+    // get full site
+    let json = []
+    await page.goto(desktopGradesUrl)
+    row = 0, index = 0
+    $ = await cheerio.load(await page.content());
+    await $("#dataGrid .listCell").each(function(i, el) {
+      json.push({})
+      index = -1
+      let gridRow = $(this)
+      $("td", gridRow).each(function(i, el) {
+        // do something here
+        let cell = $(this)
+        let data = trimString(cell.text())
+        if (data) {
+          json[row][keys[index]] = data
+        } else {
+          json[row][keys[index]] = ""
+        }
+        index++
+      })
+      row++
+    })
+
+    // edit averages from mobileJSON
+    for (let i = 0; i < json.length; i++) {
+      // find average from current class
+      let mobileClass = mobileJSON.find(function(el) {
+        return el["class"] == json[i]["class"]
+      })
+      json[i]["average"] = mobileClass["average"]
     }
-    */
+
     user.json = json
 
     success = 1
@@ -391,21 +361,6 @@ const trimString = function(string) {
   }
   return newSplit.join(" ");
 };
-
-const pushRow = function(json) {
-  json.push({
-    class: "",
-    href: "",
-    teacher: "",
-    semester: "",
-    period: "",
-    room: "",
-    average: "",
-    absences: "",
-    tardies: ""
-  });
-  return json
-}
 
 /**
  * Server Activation
