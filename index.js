@@ -12,6 +12,7 @@ const session = require("express-session");
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const winston = require("winston");
+require("dotenv").config();
 
 /**
  * App Variables
@@ -57,7 +58,7 @@ const logger = winston.createLogger({
 // If we're not in production then **ALSO** log to the `console`
 // with the colorized simple format.
 //
-if (false){//process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
     format: winston.format.combine(
       winston.format.colorize(),
@@ -230,6 +231,11 @@ async function auth(user) {
   let success = 0
   if (await page.url() != loginUrl)
     await page.goto(loginUrl)
+  else
+    await page.evaluate(function() {
+      document.getElementById("username").value = ""
+      document.getElementById("password").value = ""
+    })
   await page.type('#username', user.username)
   await page.type('#password', user.password)
   await Promise.all([
