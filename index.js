@@ -393,7 +393,7 @@ async function auth(user) {
                       if (data) {
                         json[column][keys[index]] = data;
                         index++;
-                      } else if (json[column]["class"]) {
+                      } else if (json[column]) {
                         if ((json[column]["class"] == "Student Meal" && (index == 2 || (index >= 6 && index <= 8))) || (json[column]["period"][0] == "H" && keys[index] == "average") ) {
                           index++;
                         }
