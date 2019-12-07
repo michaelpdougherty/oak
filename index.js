@@ -375,9 +375,11 @@ async function auth(user) {
                       let className = gChild.children[0].data;
                       if (className) {
                         className = trimString(className);
-                        json[column][keys[index]] = className;
+                        if (json[column]) {
+                          json[column][keys[index]] = className;
                         //a.push(gChild)
                         index++;
+                        }
                       }
 
                       let href = gChild.attribs.href;
