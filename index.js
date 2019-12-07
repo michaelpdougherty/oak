@@ -18,7 +18,7 @@ const winston = require("winston");
  */
 
 const app = express();
-const port = process.env.PORT || "8005";
+const port = process.env.PORT || "8000";
 
 // set default user
 const defaultUser = {
@@ -57,7 +57,7 @@ const logger = winston.createLogger({
 // If we're not in production then **ALSO** log to the `console`
 // with the colorized simple format.
 //
-if (true){//process.env.NODE_ENV !== 'production') {
+if (false){//process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
     format: winston.format.combine(
       winston.format.colorize(),
