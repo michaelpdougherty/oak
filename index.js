@@ -18,7 +18,7 @@ const winston = require("winston");
  */
 
 const app = express();
-const port = process.env.PORT || "8005";
+const port = process.env.PORT || "8000";
 
 // set default user
 const defaultUser = {
