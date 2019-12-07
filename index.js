@@ -18,7 +18,7 @@ const winston = require("winston");
  */
 
 const app = express();
-const port = process.env.PORT || "8000";
+const port = process.env.PORT || "8005";
 
 // set default user
 const defaultUser = {
@@ -28,11 +28,8 @@ const defaultUser = {
   json: {}
 }
 
-// set browser objs and urls
-let browser = null, page = null, content = null, location = null
-const loginUrl = "https://aspen.cps.edu/aspen/logon.do"
-const homeUrl = "https://aspen.cps.edu/aspen/home.do"
-const gradesUrl = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
+// create time variables
+let time1 = 0, time2 = 0
 
 // logger
 const logger = winston.createLogger({
@@ -69,6 +66,11 @@ if (true){//process.env.NODE_ENV !== 'production') {
   }));
 }
 
+// important urls
+const loginUrl = "https://aspen.cps.edu/aspen/logon.do"
+const homeUrl = "https://aspen.cps.edu/aspen/home.do"
+const gradesUrl = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
+
 /**
  *  App Configuration
  */
@@ -104,41 +106,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// initialize and refresh browser
-async function refreshBrowser() {
-  try {
-    if (page)
-      location = await page.url()
-    if (!browser) {
-      browser = await puppeteer.launch();
-      page = await browser.newPage();
-      await page.goto(loginUrl)
-      location = await page.url();
-      await console.log("refreshBrowser: initialize at " + location)
-    } else if (location != loginUrl && await location.split(";") < 2) {
-      let old = await page.url()
-      await page.goto(loginUrl)
-      let current = await page.url()
-      await console.log(`refreshBrowser: move from ${old} to ${current}`)
-    }
-  } catch (err) { console.log(`refreshBrowser: ${err}`) }
+// initialize puppeteer
+let browser, page
+const initPup = async () => {
+  browser = await puppeteer.launch()
+  page = await browser.newPage()
+  await page.goto(loginUrl)
 }
-
-// initialize and restart browser
-async function restartBrowser() {
-  try {
-    // set all variables to null
-    browser = null
-    content = null
-    page = null
-    location = null
-    browser = await puppeteer.launch();
-    page = await browser.newPage();
-    await page.goto(loginUrl)
-    location = await page.url();
-    await console.log("restartBrowser: initialize at " + location)
-  } catch (err) { console.log(`restartBrowser: ${err}`) }
-}
+initPup()
 
 /**
  * Routes Definitions
@@ -149,8 +124,10 @@ app.get("/", (req, res) => {
   let user = req.session.user
   // check for authentication
   if (user.loggedIn) {
+    time2 = new Date()
+    let timeElapsed = (time2 - time1) / 1000
     // user is logged in
-    res.render("index", { title: "Home", user: user });
+    res.render("index", { title: "Home", user: user, timeElapsed: timeElapsed });
   } else {
     // redirect to login
     res.redirect("/login")
@@ -172,10 +149,12 @@ app.get("/login", (req, res) => {
 
 // login handler
 app.post("/login", async (req, res) => {
+  // get start time
+  time1 = new Date()
+
   // reset user and browser
   let user = req.session.user
   user = defaultUser
-  await restartBrowser()
 
   // get login info
   const username = req.body.username;
@@ -190,7 +169,6 @@ app.post("/login", async (req, res) => {
     await auth(user).then(success => {
       if (success) {
         res.redirect("/")
-        restartBrowser()
       } else {
         res.redirect(`/login?err=${"Invalid username and/or password"}`)
       }
@@ -229,19 +207,39 @@ app.get("/class", (req, res) => {
   }
 })
 
-// auth function
+app.get("/assignments", (req, res) => {
+  let user = req.session.user
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    res.render("grades", { title: "Grades", user: user })
+  }
+})
+
+app.get("/me", (req, res) => {
+  let user = req.session.user
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    res.render("grades", { title: "Grades", user: user })
+  }
+})
+
+// auth/crawl function (it's a doozy)
 async function auth(user) {
   let success = 0
+  if (await page.url() != loginUrl)
+    await page.goto(loginUrl)
   await page.type('#username', user.username)
   await page.type('#password', user.password)
   await Promise.all([
     page.click('#logonButton'),
     page.waitForNavigation({ waitUntil: 'networkidle0' }),
   ]);
-  location = await page.url()
+  let location = await page.url()
   if (location == homeUrl || await location.split(";") > 1) {
-    await console.log("Login successful!")
-    await logger.log({
+    console.log("Login successful!")
+    logger.log({
       level: 'info',
       message: 'User logged in',
       user: user.username,
@@ -251,7 +249,8 @@ async function auth(user) {
 
     let $ = await cheerio.load(await page.content());
     let json = [];
-    let a = [];
+    //let json = user.json
+    let classLinks = [];
 
     while (json.length < 9) {
       await json.push({
@@ -278,6 +277,8 @@ async function auth(user) {
       "absences",
       "tardies"
     ];
+
+    let done = false;
 
     // parse every td for raw characters
     let column = -1;
@@ -309,7 +310,6 @@ async function auth(user) {
                       if (className) {
                         className = trimString(className);
                         json[column][keys[index]] = className;
-                        //a.push(gChild)
                         index++;
                       }
 
@@ -317,6 +317,7 @@ async function auth(user) {
                       if (href) {
                         json[column][keys[index]] = href;
                         index++;
+                        classLinks.push(`a[href="${href}"]`)
                       }
                     }
                     // eliminate whitespace in data
@@ -340,7 +341,27 @@ async function auth(user) {
       column++;
     });
 
-    //user.a = a
+
+    /*
+    / Get individual class details
+    */
+    /*
+    for (let i = 0; i < classLinks.length; i++) {
+      // click a page link
+      await Promise.all([
+        page.click(classLinks[i]),
+        page.waitForNavigation({ waitUntil: 'networkidle0' })
+      ])
+      $ = await cheerio.load(await page.content())
+      await $(".detailValue").filter(function(index, el) {
+        //console.log(this)
+        if (index == 5) {
+          json[i].average = this.children[0].data.trim().trim().trim().split(" ")[0]
+        }
+      })
+      await page.goto(gradesUrl)
+    }
+    */
     user.json = json
 
     success = 1

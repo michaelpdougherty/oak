@@ -5,9 +5,13 @@ block layout-content
     h1.Banner #{user.username}
     div.Message.Center
       div.Title.text-center
-        h3 Welcome
+        h3 #{timeElapsed} sec
       div.NavButtons.flex-col
         a(href="/grades")
           div.NavButton Grades
+        a(href="/assignments")
+          div.NavButton Assignments
+        a(href="/me")
+          div.NavButton Me
         a(href="/logout")
           div.NavButton Log Out

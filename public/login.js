@@ -6,14 +6,11 @@ const header = document.getElementById("header");
 const err = document.getElementById("err");
 form.onsubmit = () => {
   if (!form.disabled) {
-    header.innerHTML = "LOGGING IN...";
+    header.innerHTML = "PLEASE WAIT...";
     go.style.display = "none";
     if (err) { err.style.display = "none"; }
     form.disabled = true;
     usernameInput.readOnly = true;
     passwordInput.readOnly = true;
-    //usernameInput.blur();
-    //passwordInput.blur();
-    //form.blur();
   }
 };
