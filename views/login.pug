@@ -1,5 +1,8 @@
 extends layout
 
+block script
+  script(src="/login.js")
+
 block layout-content
   div.View.WelcomeView
     h1(onclick="window.location='/'").Banner OAK
@@ -10,10 +13,8 @@ block layout-content
         div(id="err").Err #{err}
       form(method="post", action="/login", id="login-form")
         div.form-group
-          input(placeholder="Username", name="username", type="text").form-control
+          input(placeholder="Username", name="username", type="text", id="usernameInput").form-control
         div.form-group
-          input(placeholder="Password", name="password", type="password").form-control
+          input(placeholder="Password", name="password", type="password", id="passwordInput").form-control
         div.NavButtons
           button(type="submit", id="go").NavButton Go
-
-  script(src="/login.js")

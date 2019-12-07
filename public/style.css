@@ -199,7 +199,7 @@ a {
 
 /* new styles */
 .WelcomeView {
-  background: url("oak.jpg") left bottom;
+  background: url("oak.jpg") left top/*bottom*/;
   background-size: cover;
 }
 
@@ -288,4 +288,8 @@ td:nth-child(2) {
   table {
     max-width: 75vw;
   }
+}
+
+.table td {
+  vertical-align: middle;
 }
