@@ -10,8 +10,10 @@ form.onsubmit = () => {
     go.style.display = "none";
     if (err) { err.style.display = "none"; }
     form.disabled = true;
-    usernameInput.blur();
-    passwordInput.blur();
-    form.blur();
+    usernameInput.readOnly = true;
+    passwordInput.readOnly = true;
+    //usernameInput.blur();
+    //passwordInput.blur();
+    //form.blur();
   }
 };
