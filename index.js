@@ -18,7 +18,7 @@ const winston = require("winston");
  */
 
 const app = express();
-const port = process.env.PORT || "8000";
+const port = process.env.PORT || "8005";
 
 // set default user
 const defaultUser = {
@@ -393,8 +393,10 @@ async function auth(user) {
                       if (data) {
                         json[column][keys[index]] = data;
                         index++;
-                      } else if ((json[column]["class"] == "Student Meal" && (index == 2 || (index >= 6 && index <= 8))) || (json[column]["period"][0] == "H" && keys[index] == "average") ) {
-                        index++;
+                      } else if (json[column]["class"]) {
+                        if ((json[column]["class"] == "Student Meal" && (index == 2 || (index >= 6 && index <= 8))) || (json[column]["period"][0] == "H" && keys[index] == "average") ) {
+                          index++;
+                        }
                       }
                     }
                   }
