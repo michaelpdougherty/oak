@@ -383,7 +383,7 @@ async function auth(user) {
                       }
 
                       let href = gChild.attribs.href;
-                      if (href) {
+                      if (href && json[column]) {
                         json[column][keys[index]] = href;
                         index++;
                       }
