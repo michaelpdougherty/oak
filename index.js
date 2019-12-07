@@ -29,7 +29,7 @@ const defaultUser = {
 }
 
 // set browser objs and urls
-let browser, page, content, location = null
+let browser = null, page = null, content = null, location = null
 const loginUrl = "https://aspen.cps.edu/aspen/logon.do"
 const homeUrl = "https://aspen.cps.edu/aspen/home.do"
 const gradesUrl = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
@@ -69,73 +69,6 @@ if (true){//process.env.NODE_ENV !== 'production') {
   }));
 }
 
-// ***************
-// Allows for JSON logging
-// ***************
-/*
-logger.log({
-  level: 'info',
-  message: 'Pass an object and this works',
-  additional: 'properties',
-  are: 'passed along'
-});
-
-logger.info({
-  message: 'Use a helper method if you want',
-  additional: 'properties',
-  are: 'passed along'
-});
-
-// ***************
-// Allows for parameter-based logging
-// ***************
-
-logger.log('info', 'Pass a message and this works', {
-  additional: 'properties',
-  are: 'passed along'
-});
-
-logger.info('Use a helper method if you want', {
-  additional: 'properties',
-  are: 'passed along'
-});
-
-// ***************
-// Allows for string interpolation
-// ***************
-
-// info: test message my string {}
-logger.log('info', 'test message %s', 'my string');
-
-// info: test message my 123 {}
-logger.log('info', 'test message %d', 123);
-
-// info: test message first second {number: 123}
-logger.log('info', 'test message %s, %s', 'first', 'second', { number: 123 });
-
-
-// prints "Found error at %s"
-logger.info('Found %s at %s', 'error', new Date());
-logger.info('Found %s at %s', 'error', new Error('chill winston'));
-logger.info('Found %s at %s', 'error', /WUT/);
-logger.info('Found %s at %s', 'error', true);
-logger.info('Found %s at %s', 'error', 100.00);
-logger.info('Found %s at %s', 'error', ['1, 2, 3']);
-
-
-// ***************
-// Allows for logging Error instances
-// ***************
-
-logger.warn(new Error('Error passed as info'));
-logger.log('error', new Error('Error passed as message'));
-
-logger.warn('Maybe important error: ', new Error('Error passed as meta'));
-logger.log('error', 'Important error: ', new Error('Error passed as meta'));
-
-logger.error(new Error('Error as info'));
-*/
-
 /**
  *  App Configuration
  */
@@ -159,6 +92,7 @@ app.use(session({
   secret: 'fy7e89afe798wa',
   resave: false,
   saveUninitialized: false,
+  user: defaultUser
 }))
 
 // initialize session
@@ -190,14 +124,21 @@ async function refreshBrowser() {
   } catch (err) { console.log(`refreshBrowser: ${err}`) }
 }
 
-/*
-app.use(async (req, res, next) => {
+// initialize and restart browser
+async function restartBrowser() {
   try {
-    await refreshBrowser()
-    await next();
-  } catch (err) { console.log(err) }
-});
-*/
+    // set all variables to null
+    browser = null
+    content = null
+    page = null
+    location = null
+    browser = await puppeteer.launch();
+    page = await browser.newPage();
+    await page.goto(loginUrl)
+    location = await page.url();
+    await console.log("restartBrowser: initialize at " + location)
+  } catch (err) { console.log(`restartBrowser: ${err}`) }
+}
 
 /**
  * Routes Definitions
@@ -221,29 +162,20 @@ app.get("/login", (req, res) => {
   let user = req.session.user
   user = defaultUser
 
-/*
-  // refresh browser
-  browser = null
-  refreshBrowser().then(() => {*/
-    // check for err message
-    let err = req.query.err
-    if (!err) {
-      res.render("login", { title: "Welcome", user: user });
-    } else {
-      res.render("login", { title: "Welcome", user: user, err: err });
-    }
-  //}).catch(err => { console.log(err) })
+  let err = req.query.err
+  if (!err) {
+    res.render("login", { title: "Welcome", user: user });
+  } else {
+    res.render("login", { title: "Welcome", user: user, err: err });
+  }
 })
 
 // login handler
 app.post("/login", async (req, res) => {
-  // reset user
+  // reset user and browser
   let user = req.session.user
   user = defaultUser
-
-  // refresh browser
-  browser = null
-  await refreshBrowser()
+  await restartBrowser()
 
   // get login info
   const username = req.body.username;
@@ -258,6 +190,7 @@ app.post("/login", async (req, res) => {
     await auth(user).then(success => {
       if (success) {
         res.redirect("/")
+        restartBrowser()
       } else {
         res.redirect(`/login?err=${"Invalid username and/or password"}`)
       }
@@ -272,9 +205,8 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/logout", async (req, res) => {
-    req.session.user = defaultUser
-    browser, page, content, location = null
-    await refreshBrowser()
+    req.session.destroy()
+    //req.session.user = defaultUser
     await res.redirect("/")
 })
 
@@ -350,6 +282,7 @@ async function auth(user) {
     // parse every td for raw characters
     let column = -1;
     await $("#dataGrid tr").filter(function(i, el) {
+      if (!json[column]) { json = pushRow(json) }
       let index = 0;
       // skip header column
       if (column > -1) {
@@ -375,15 +308,13 @@ async function auth(user) {
                       let className = gChild.children[0].data;
                       if (className) {
                         className = trimString(className);
-                        if (json[column]) {
-                          json[column][keys[index]] = className;
+                        json[column][keys[index]] = className;
                         //a.push(gChild)
                         index++;
-                        }
                       }
 
                       let href = gChild.attribs.href;
-                      if (href && json[column]) {
+                      if (href) {
                         json[column][keys[index]] = href;
                         index++;
                       }
@@ -395,10 +326,8 @@ async function auth(user) {
                       if (data) {
                         json[column][keys[index]] = data;
                         index++;
-                      } else if (json[column]) {
-                        if ((json[column]["class"] == "Student Meal" && (index == 2 || (index >= 6 && index <= 8))) || (json[column]["period"][0] == "H" && keys[index] == "average") ) {
+                      } else if ((json[column]["class"] == "Student Meal" && (index == 2 || (index >= 6 && index <= 8))) || (json[column]["period"][0] == "H" && keys[index] == "average") ) {
                           index++;
-                        }
                       }
                     }
                   }
@@ -436,6 +365,21 @@ const trimString = function(string) {
   }
   return newSplit.join(" ");
 };
+
+const pushRow = function(json) {
+  json.push({
+    class: "",
+    href: "",
+    teacher: "",
+    semester: "",
+    period: "",
+    room: "",
+    average: "",
+    absences: "",
+    tardies: ""
+  });
+  return json
+}
 
 /**
  * Server Activation
