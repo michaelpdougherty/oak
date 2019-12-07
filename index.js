@@ -109,12 +109,11 @@ app.use((req, res, next) => {
 
 // initialize puppeteer
 let browser, page
-const initPup = async () => {
-  browser = await puppeteer.launch()
+(async () => {
+  browser = await puppeteer.launch({ headless: (process.env.NODE_ENV == "production") })
   page = await browser.newPage()
   await page.goto(loginUrl)
-}
-initPup()
+})()
 
 /**
  * Routes Definitions
