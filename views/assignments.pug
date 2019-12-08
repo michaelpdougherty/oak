@@ -1,7 +1,7 @@
 extends layout
 
 block script
-  script(src="/grades.js")
+  script(src="/assignments.js")
 
 block layout-content
   div.View.WelcomeView
@@ -13,8 +13,10 @@ block layout-content
           thead
             th(colspan="3")= user.json[c]["class"]
           tbody
+          - let a = 0
           each j in i
-            tr
+            - let redir = `redirect(${c}, ${a})`
+            tr(onclick=redir)
               td= j['assignmentName']
               //-
                 td= j['dateDue']
@@ -23,6 +25,7 @@ block layout-content
                 td= j['categoryWeight']
               td= j['percentage']
               td= j['fraction']
+            - a++
         - c++
     div.NavButtons
       a(href="/")

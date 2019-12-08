@@ -275,6 +275,21 @@ app.get("/assignments", (req, res) => {
   }
 })
 
+app.get("/assignment", (req, res) => {
+  let user = req.session.user
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    let classIndex = req.query.class
+    let assignmentIndex = req.query.assignment
+    if (!(classIndex && assignmentIndex)) {
+      res.redirect("/assignments")
+    } else {
+      res.render("assignment", { title: "Assignment", user: user, classIndex: classIndex, assignmentIndex: assignmentIndex })
+    }
+  }
+})
+
 app.get("/me", (req, res) => {
   let user = req.session.user
   if (!user.loggedIn) {
@@ -407,7 +422,9 @@ async function fetchAssignments(user) {
       $("td", gridRow).each(function(i, el) {
         let cell = $(this)
         let data = trimString(cell.text())
-        if (data !== "No matching records" && assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < 11) {
+        if (data == "No matching records") {
+          assignments[classNum] = []
+        } else if (assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < 11) {
           assignments[classNum][row][assignmentKeys[index]] = data
         }
         index++
