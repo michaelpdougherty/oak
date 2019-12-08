@@ -9,6 +9,7 @@
   --secondary: #2a3747;
 
   --highlight: #4b8b3b;
+  --highlight-secondary: #BBBE64;
 
   --ui-shawdow: 0 2px 4px -1px rgba(0, 0, 0, 0.06),
     0 4px 5px 0 rgba(0, 0, 0, 0.06), 0 1px 10px 0 rgba(0, 0, 0, 0.08);
@@ -127,10 +128,21 @@ a {
   padding-bottom: 20px;
 }
 
+/* allow space for error message */
+.Title.Login {
+  padding-bottom: 10px;
+}
+
+#login-form {
+  padding-top: 10px;
+}
+
 .Message > .Err {
   /* new styles */
+  margin: 0;
+  padding: 0;
+  font-size: 0.8rem;
   color: darkred;
-  margin-bottom: 15px;
 }
 
 .Message > .Details {

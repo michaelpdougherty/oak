@@ -30,8 +30,9 @@ const defaultUser = {
   loginTime: 0,
 }
 
-// create time variables
-let time1 = 0, time2 = 0
+// create time variable
+let time1 = 0
+let loginTime = 0
 
 // logger
 const logger = winston.createLogger({
@@ -148,8 +149,11 @@ app.get("/", (req, res) => {
   let user = req.session.user
   // check for authentication
   if (user.loggedIn) {
-    if (!user.loginTime) {
+    if (!(user.loginTime || loginTime)) {
       user.loginTime = (new Date() - time1) / 1000
+      loginTime = (new Date() - time1) / 1000
+    } else if (!user.loginTime) {
+      user.loginTime = loginTime
     }
     // user is logged in
     res.render("index", { title: "Home", user: user });
@@ -173,7 +177,7 @@ app.get("/login", (req, res) => {
 })
 
 // login handler
-app.post("/login", async (req, res) => {
+app.post("/login", (req, res) => {
   // get start time
   time1 = new Date()
 
@@ -191,19 +195,25 @@ app.post("/login", async (req, res) => {
     user.username = username
     user.password = password;
 
-    await auth(user).then(success => {
+    auth(user).then(success => {
       if (success) {
         res.redirect("/")
       } else {
         res.redirect(`/login?err=${"Invalid username and/or password"}`)
       }
+      return success
+    }).then(success => {
+      //if (success) {}
+        return fetchGrades(user)
+    }).then(() => {
+      req.session.save()
     }).catch(err => { console.log(err) })
 
   } else {
     // show err
     let err = "Please enter a username and password"
     console.log(err)
-    await res.redirect(`/login?err=${err}`)
+    res.redirect(`/login?err=${err}`)
   }
 });
 
@@ -218,7 +228,13 @@ app.get("/grades", (req, res) => {
   if (!user.loggedIn) {
     res.redirect("/")
   } else {
-    res.render("grades", { title: "Grades", user: user })
+    if (user.json.length) {
+      res.render("grades", { title: "Grades", user: user })
+    } else {
+      setTimeout(() => {
+        res.redirect("/grades")
+      }, 250)
+    }
   }
 })
 
@@ -271,50 +287,58 @@ async function auth(user) {
   // determine if login succeeded
   let location = await page.url()
   if (location !== loginUrl) {
-    await console.log("Login successful!")
-    await logger.log({
+    console.log("Login successful!")
+    success = 1
+    logger.log({
       level: 'info',
       message: 'User logged in',
       user: user.username,
     });
     user.loggedIn = true
+  } else {
+    console.log("Login failed!")
+  }
+  return success
+}
 
-    // init json
-    let mobileJSON = []
+async function fetchGrades(user) {
+  // init json
+  let mobileJSON = []
 
-    // visit grades page
-    let homeUrl = await page.url()
-    let gradesUrl = homeUrl + gradesExt
-    await page.goto(gradesUrl)
-    await page.waitForSelector(".ui-grid-row")
-    let $ = await cheerio.load(await page.content());
-    let row = 0, index = 0
-    await $(".ui-grid-row").each(function(i, el) {
-      index = 0
-      mobileJSON.push({})
-      let gridRow = $(this)
-      $(".ui-grid-cell", gridRow).each(function(i, el) {
-        let cell = $(this)
-        let data = trimString(cell.text())
-        if (index == 2) {
-          data = data.split(" ")[0]
-        }
-        mobileJSON[row][mobileKeys[index]] = data
-        index++
-      })
-      row++
+  // visit grades page
+  let homeUrl = await page.url()
+  let gradesUrl = homeUrl + gradesExt
+  await page.goto(gradesUrl)
+  await page.waitForSelector(".ui-grid-row")
+  let $ = await cheerio.load(await page.content());
+  let row = 0, index = 0
+  await $(".ui-grid-row").each(function(i, el) {
+    index = 0
+    mobileJSON.push({})
+    let gridRow = $(this)
+    $(".ui-grid-cell", gridRow).each(function(i, el) {
+      let cell = $(this)
+      let data = trimString(cell.text())
+      if (index == 2) {
+        data = data.split(" ")[0]
+      }
+      mobileJSON[row][mobileKeys[index]] = data
+      index++
     })
+    row++
+  })
 
-    // get full site
-    let json = []
-    await page.goto(desktopGradesUrl)
-    row = 0, index = 0
-    $ = await cheerio.load(await page.content());
-    await $("#dataGrid .listCell").each(function(i, el) {
-      json.push({})
-      index = -1
-      let gridRow = $(this)
-      $("td", gridRow).each(function(i, el) {
+  // get full site
+  let json = []
+  await page.goto(desktopGradesUrl)
+  row = 0, index = 0
+  $ = await cheerio.load(await page.content());
+  await $("#dataGrid .listCell").each(function(i, el) {
+    json.push({})
+    index = -1
+    let gridRow = $(this)
+    $("td", gridRow).each(function(i, el) {
+      if (index >= 0) {
         // do something here
         let cell = $(this)
         let data = trimString(cell.text())
@@ -323,27 +347,24 @@ async function auth(user) {
         } else {
           json[row][keys[index]] = ""
         }
-        index++
-      })
-      row++
+      }
+      index++
     })
+    row++
+  })
 
-    // edit averages from mobileJSON
-    for (let i = 0; i < json.length; i++) {
-      // find average from current class
-      let mobileClass = mobileJSON.find(function(el) {
-        return el["class"] == json[i]["class"]
-      })
-      json[i]["average"] = mobileClass["average"]
-    }
-
-    user.json = json
-
-    success = 1
-  } else {
-    await console.log("Login failed!")
+  // edit averages from mobileJSON
+  for (let i = 0; i < json.length; i++) {
+    // find average from current class
+    let mobileClass = mobileJSON.find(function(el) {
+      return el["class"] == json[i]["class"]
+    })
+    json[i]["average"] = mobileClass["average"]
   }
-  return success
+
+  user.json = json
+  console.log("Fetched grades!")
+  return user
 }
 
 // helper function that trims whitespace and newline characters from the inside of strings

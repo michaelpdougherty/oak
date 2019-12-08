@@ -1,3 +1,5 @@
+// public/login.js
+// prevent multiple form submissions
 const form = document.getElementById("login-form");
 const usernameInput = document.getElementById("usernameInput")
 const passwordInput = document.getElementById("passwordInput")

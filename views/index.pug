@@ -1,5 +1,8 @@
 extends layout
 
+block script
+  script(src="/index.js")
+
 block layout-content
   div.View.WelcomeView
     h1.Banner #{user.username}
@@ -8,7 +11,7 @@ block layout-content
         h3 #{user.loginTime} sec
       div.NavButtons.flex-col
         a(href="/grades")
-          div.NavButton Grades
+          div(id="gradesButton").NavButton Grades
         //-
           a(href="/assignments")
             div.NavButton Assignments
