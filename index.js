@@ -150,10 +150,17 @@ app.get("/", (req, res) => {
   // check for authentication
   if (user.loggedIn) {
     if (!(user.loginTime || loginTime)) {
-      user.loginTime = (new Date() - time1) / 1000
-      loginTime = (new Date() - time1) / 1000
+      let elapsedTime = (new Date() - time1) / 1000
+      user.loginTime = elapsedTime
+      loginTime = elapsedTime
+      setTimeout(() => {
+        loginTime = 0
+      }, 4000)
     } else if (!user.loginTime) {
       user.loginTime = loginTime
+      loginTime = 0
+    } else {
+      loginTime = 0
     }
     // user is logged in
     res.render("index", { title: "Home", user: user });
