@@ -7,3 +7,10 @@ gradesButton.onclick = () => {
     gradesButton.style.background = "var(--highlight)"
   }, 2000)
 }
+const assignmentsButton = document.getElementById("assignmentsButton")
+assignmentsButton.onclick = () => {
+  assignmentsButton.style.background = "var(--highlight-secondary)"//"#BBBE64"
+  setTimeout(() => {
+    assignmentsButton.style.background = "var(--highlight)"
+  }, 2000)
+}

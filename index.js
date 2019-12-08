@@ -26,7 +26,8 @@ const defaultUser = {
   username: "",
   password: "",
   loggedIn: false,
-  json: {},
+  json: [],
+  assignments: [],
   time: {
     in: 0,
     elap: 0,
@@ -91,6 +92,20 @@ const keys = [
   "average",
   "absences",
   "tardies"
+]
+
+const assignmentKeys = [
+  "checkbox",
+  "assignmentName",
+  "dateAssigned",
+  "dateDue",
+  "categoryDesc",
+  "categoryWeight",
+  "altAssignmentName",
+  "longScore",
+  "percentage",
+  "fraction",
+  "totalScore"
 ]
 
 /**
@@ -200,6 +215,10 @@ app.post("/login", (req, res) => {
       return fetchGrades(user)
     }).then(() => {
       req.session.save()
+    }).then(() => {
+      return fetchAssignments(user)
+    }).then(() => {
+      req.session.save()
     }).catch(err => { console.log(err) })
 
   } else {
@@ -226,7 +245,7 @@ app.get("/grades", (req, res) => {
     } else {
       setTimeout(() => {
         res.redirect("/grades")
-      }, 500)
+      }, 350)
     }
   }
 })
@@ -246,7 +265,13 @@ app.get("/assignments", (req, res) => {
   if (!user.loggedIn) {
     res.redirect("/")
   } else {
-    res.render("grades", { title: "Grades", user: user })
+    if (user.assignments.length) {
+      res.render("assignments", { title: "Assignments", user: user })
+    } else {
+      setTimeout(() => {
+        res.redirect("/assignments")
+      }, 600)
+    }
   }
 })
 
@@ -259,7 +284,7 @@ app.get("/me", (req, res) => {
   }
 })
 
-// auth/crawl function (it's a doozy)
+
 async function auth(user) {
   let success = 0
   // log in
@@ -357,6 +382,49 @@ async function fetchGrades(user) {
 
   user.json = json
   console.log("Fetched grades!")
+  return user
+}
+
+async function fetchAssignments(user) {
+
+  //let assignments = []
+  let assignments = [], $ = 0, row = 0, index = 0, classNum = 0
+
+  await Promise.all([
+    page.click('a[title="List of assignments"]'),
+    page.waitForNavigation({ waitUntil: 'networkidle0' }),
+  ]);
+
+  for (let i = 0; i < user.json.length - 1; i++) {
+    // repeatable code block
+    $ = await cheerio.load(await page.content())
+    row = 0, index = 0
+    await assignments.push([])
+    await $(".listCell").each(function(i, el) {
+      index = 0
+      assignments[classNum].push({})
+      let gridRow = $(this)
+      $("td", gridRow).each(function(i, el) {
+        let cell = $(this)
+        let data = trimString(cell.text())
+        if (data !== "No matching records" && assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < 11) {
+          assignments[classNum][row][assignmentKeys[index]] = data
+        }
+        index++
+      })
+      row++
+    })
+    classNum++
+
+    // get next page
+    await Promise.all([
+      page.click('#nextButton'),
+      page.waitForNavigation({ waitUntil: 'networkidle0' }),
+    ]);
+  }
+
+  user.assignments = assignments
+  console.log("Fetched assignments!")
   return user
 }
 

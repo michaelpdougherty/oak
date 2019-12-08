@@ -1,7 +1,8 @@
 extends layout
 
-block script
-  script(src="/index.js")
+//-
+  block script
+    script(src="/index.js")
 
 block layout-content
   div.View.WelcomeView
@@ -11,10 +12,10 @@ block layout-content
         h3 #{user.time.elap} SEC
       div.NavButtons.flex-col
         a(href="/grades")
-          div(id="gradesButton").NavButton Grades
+          div(id="gradesButton").NavButton.darken Grades
+        a(href="/assignments")
+          div(id="assignmentsButton").NavButton.darken Assignments
         //-
-          a(href="/assignments")
-            div.NavButton Assignments
           a(href="/me")
             div.NavButton Me
         a(href="/logout")

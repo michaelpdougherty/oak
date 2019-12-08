@@ -6,7 +6,7 @@ block script
 block layout-content
   div.View.WelcomeView
     h1.Banner #{user.username}
-    div.Message.Grades.Center
+    div.Message.Grades.Center.hover
       table.table
         thead.text-center.over-900px
           th.over-900px Period
@@ -17,28 +17,28 @@ block layout-content
           th.over-900px Average
           th.over-900px Absences
           th.over-900px Tardies
-        tbody.text-center
+        tbody
           - let n = 0
           each i in user.json
             #user
               - let redir = `redirect(${n})`
               tr(onclick=redir)
-                td= user.json[n].period.split("(")[0]
+                td.text-center= user.json[n].period.split("(")[0]
                 if user.json[n].class.split(" ")[0][1] == "S"
-                    td.over-600px= user.json[n].class.split(" ").slice(1).join(" ")
+                    td.text-center.over-600px= user.json[n].class.split(" ").slice(1).join(" ")
                 else
-                    td.over-600px= user.json[n].class
+                    td.text-center.over-600px= user.json[n].class
                 if user.json[n].class == "Student Meal"
                   td.under-600px Lunch
                   td.under-900px.over-600px= user.json[n].teacher.split(",")[0]
                 else
                   td.under-900px= user.json[n].teacher.split(",")[0]
-                td.over-900px= user.json[n].teacher
-                td.over-600px= user.json[n].semester.split("S")[1]
-                td.over-600px= user.json[n].room
-                td= user.json[n].average
-                td.over-600px= user.json[n].absences
-                td.over-600px= user.json[n++].tardies
+                td.text-center.over-900px= user.json[n].teacher
+                td.text-center.over-600px= user.json[n].semester.split("S")[1]
+                td.text-center.over-600px= user.json[n].room
+                td.text-center= user.json[n].average
+                td.text-center.over-600px= user.json[n].absences
+                td.text-center.over-600px= user.json[n++].tardies
     div.NavButtons
       a(href="/")
         div.NavButton Home

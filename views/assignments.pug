@@ -1,0 +1,31 @@
+extends layout
+
+block script
+  script(src="/grades.js")
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner #{user.username}
+    div.Message.Assignments.Center.hover
+      -let c = 0
+      each i in user.assignments
+        table.table
+          thead
+            th(colspan="3")= user.json[c]["class"]
+          tbody
+          each j in i
+            tr
+              td= j['assignmentName']
+              //-
+                td= j['dateDue']
+                td= j['dateAssigned']
+                td= j['categoryDesc']
+                td= j['categoryWeight']
+              td= j['percentage']
+              td= j['fraction']
+        - c++
+    div.NavButtons
+      a(href="/")
+        div.NavButton Home
+      a(href="/logout")
+        div.NavButton Log Out

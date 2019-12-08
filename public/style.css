@@ -242,18 +242,24 @@ td:first-child {
   /*max-width: 200px;*/
 }
 
-.Grades tr:hover {
+.hover tr:hover, .hover tr:active, .hover tr:focus {
   cursor: pointer;
   background-color: rgba(0, 0, 0, .1)
 }
 
-.Grades thead tr:hover {
+.hover thead tr:hover, .hover thead tr:active, .hover thead tr:focus{
   cursor: initial;
   background-color: initial;
 }
 
 td:nth-child(2) {
   max-width: 300px;
+}
+
+div.NavButton.darken:hover, div.NavButton.darken:active, div.NavButton.darken:focus {
+  background: var(--highlight-secondary);
+  border: none;
+  box-shadow: none;
 }
 
 /* mobile styles */
@@ -271,6 +277,9 @@ td:nth-child(2) {
   }
   td:first-child {
     padding-right: 0;
+  }
+  .Assignments td:first-child {
+    max-width: 150px;
   }
 }
 
