@@ -27,12 +27,11 @@ const defaultUser = {
   password: "",
   loggedIn: false,
   json: {},
-  loginTime: 0,
+  time: {
+    in: 0,
+    elap: 0,
+  }
 }
-
-// create time variable
-let time1 = 0
-let loginTime = 0
 
 // logger
 const logger = winston.createLogger({
@@ -149,19 +148,6 @@ app.get("/", (req, res) => {
   let user = req.session.user
   // check for authentication
   if (user.loggedIn) {
-    if (!(user.loginTime || loginTime)) {
-      let elapsedTime = (new Date() - time1) / 1000
-      user.loginTime = elapsedTime
-      loginTime = elapsedTime
-      setTimeout(() => {
-        loginTime = 0
-      }, 4000)
-    } else if (!user.loginTime) {
-      user.loginTime = loginTime
-      loginTime = 0
-    } else {
-      loginTime = 0
-    }
     // user is logged in
     res.render("index", { title: "Home", user: user });
   } else {
@@ -185,10 +171,7 @@ app.get("/login", (req, res) => {
 
 // login handler
 app.post("/login", (req, res) => {
-  // get start time
-  time1 = new Date()
-
-  // reset user and browser
+  // reset user
   let user = req.session.user
   user = defaultUser
 
@@ -200,10 +183,13 @@ app.post("/login", (req, res) => {
     // save login to session
     let user = req.session.user
     user.username = username
-    user.password = password;
+    user.password = password
+    // get start time
+    user.time.in = new Date().getTime()
 
     auth(user).then(success => {
       if (success) {
+        user.time.elap = (new Date().getTime() - user.time.in) / 1000
         res.redirect("/")
       } else {
         res.redirect(`/login?err=${"Invalid username and/or password"}`)
@@ -211,7 +197,7 @@ app.post("/login", (req, res) => {
       return success
     }).then(success => {
       //if (success) {}
-        return fetchGrades(user)
+      return fetchGrades(user)
     }).then(() => {
       req.session.save()
     }).catch(err => { console.log(err) })

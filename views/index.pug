@@ -8,7 +8,7 @@ block layout-content
     h1.Banner #{user.username}
     div.Message.Center
       div.Title.text-center
-        h3 #{user.loginTime} sec
+        h3 #{user.time.elap} SEC
       div.NavButtons.flex-col
         a(href="/grades")
           div(id="gradesButton").NavButton Grades
