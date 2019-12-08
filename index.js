@@ -226,7 +226,7 @@ app.get("/grades", (req, res) => {
     } else {
       setTimeout(() => {
         res.redirect("/grades")
-      }, 250)
+      }, 500)
     }
   }
 })
