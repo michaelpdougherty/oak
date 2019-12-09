@@ -321,6 +321,7 @@ async function auth(user) {
   let location = await page.url()
   if (location !== loginUrl) {
     console.log("Login successful!")
+    console.log(`User: ${user.username}`)
     success = 1
     logger.log({
       level: 'info',
