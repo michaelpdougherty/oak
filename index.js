@@ -468,9 +468,15 @@ const trimString = function(string) {
 /**
  * Server Activation
  */
-https.createServer({
-  key: fs.readFileSync(process.env.KEY),
-  cert: fs.readFileSync(process.env.CER)
-}, app).listen(port, () => {
-  console.log(`Listening to requests on https://localhost:${port}`);
-});
+if (process.env.NODE_ENV == "production") {
+  https.createServer({
+    key: fs.readFileSync(process.env.KEY),
+    cert: fs.readFileSync(process.env.CER)
+  }, app).listen(port, () => {
+    console.log(`Listening to requests on https://localhost:${port}`);
+  });
+} else {
+  app.listen(port, () => {
+    console.log(`Listening to requests on http://localhost;${port}`);
+  });
+}
