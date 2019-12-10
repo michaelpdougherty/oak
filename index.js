@@ -473,7 +473,7 @@ if (process.env.NODE_ENV == "production") {
     key: fs.readFileSync(process.env.KEY),
     cert: fs.readFileSync(process.env.CER)
   }, app).listen(port, () => {
-    console.log(`Listening to requests on https://localhost:${port}`);
+    console.log("Listening to requests on https://oakgrades.com");
   });
 } else {
   app.listen(port, () => {
