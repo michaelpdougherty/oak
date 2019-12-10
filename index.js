@@ -148,7 +148,7 @@ const iPhone = puppeteer.devices["iPhone 6"]
 // initialize puppeteer
 let browser, page
 (async () => {
-  browser = await puppeteer.launch({ headless: (process.env.NODE_ENV == "production") })
+  browser = await puppeteer.launch({ headless: (process.env.NODE_ENV == "production"), args: ["--no-sandbox", "--disable-setuid-sandbox"] })
   page = await browser.newPage()
   await page.emulate(iPhone)
   await page.goto(loginUrl)
