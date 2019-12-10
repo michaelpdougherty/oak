@@ -215,7 +215,6 @@ a {
   background-size: cover;
 }
 
-
 .Center {
   margin: auto;
 }
@@ -242,12 +241,12 @@ td:first-child {
   /*max-width: 200px;*/
 }
 
-.hover tr:hover, .hover tr:active, .hover tr:focus {
+.hover tr:hover, .hover tr:focus, .hover tr:active {
   cursor: pointer;
-  background-color: rgba(0, 0, 0, .1)
+  background-color: rgba(0, 0, 0, .1) !important;
 }
 
-.hover thead tr:hover, .hover thead tr:active, .hover thead tr:focus{
+.hover thead tr:hover, .hover thead tr:focus, .hover thead tr:active {
   cursor: initial;
   background-color: initial;
 }
@@ -256,13 +255,19 @@ td:nth-child(2) {
   max-width: 300px;
 }
 
-div.NavButton.darken:hover, div.NavButton.darken:active, div.NavButton.darken:focus {
+.NavButton.darken:hover, .NavButton.darken:focus, .NavButton.darken:active {
   background: var(--highlight-secondary);
   border: none;
   box-shadow: none;
 }
 
-/* mobile styles */
+.Message/*.Assignments*/ {
+  max-width: 95%;
+  max-height: 75%;
+  overflow: scroll;
+}
+
+/* width-variable styles */
 @media only screen and (min-width: 600px) {
   .under-600px {
     display: none;
@@ -283,13 +288,11 @@ div.NavButton.darken:hover, div.NavButton.darken:active, div.NavButton.darken:fo
   }
 }
 
-.Message.Assignments {
-  max-width: 95%;
-  max-height: 75%;
-  overflow: scroll;
+.table td {
+  vertical-align: middle;
 }
 
-/* tablet styles */
+/*
 @media only screen and (max-width: 750px) {
   .Message {
     max-width: 95%;
@@ -297,26 +300,22 @@ div.NavButton.darken:hover, div.NavButton.darken:active, div.NavButton.darken:fo
     overflow: scroll;
   }
 }
+*/
 
-/* desktop styles */
 @media only screen and (max-width: 900px) {
   .over-900px {
     display: none;
   }
 }
+
 @media only screen and (min-width: 900px) {
   .under-900px {
     display: none;
   }
 }
 
-/* large screen styles */
 @media only screen and (min-width: 1600px) {
   table {
     max-width: 75vw;
   }
-}
-
-.table td {
-  vertical-align: middle;
 }

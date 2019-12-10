@@ -12,6 +12,9 @@ const session = require("express-session");
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const winston = require("winston");
+const https = require("https");
+const fs = require("fs");
+const url = require("url");
 require("dotenv").config();
 
 /**
@@ -465,7 +468,9 @@ const trimString = function(string) {
 /**
  * Server Activation
  */
-
-app.listen(port, () => {
-  console.log(`Listening to requests on http://localhost:${port}`);
+https.createServer({
+  key: fs.readFileSync(process.env.KEY),
+  cert: fs.readFileSync(process.env.CER)
+}, app).listen(port, () => {
+  console.log(`Listening to requests on https://localhost:${port}`);
 });
