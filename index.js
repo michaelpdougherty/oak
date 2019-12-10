@@ -477,6 +477,6 @@ if (process.env.NODE_ENV == "production") {
   });
 } else {
   app.listen(port, () => {
-    console.log(`Listening to requests on http://localhost;${port}`);
+    console.log(`Listening to requests on http://localhost:${port}`);
   });
 }
