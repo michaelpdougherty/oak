@@ -34,7 +34,8 @@ const defaultUser = {
   time: {
     in: 0,
     elap: 0,
-  }
+  },
+  tabIndex: 0
 }
 
 // logger
@@ -149,13 +150,21 @@ app.use((req, res, next) => {
 const iPhone = puppeteer.devices["iPhone 6"]
 
 // initialize puppeteer
-let browser, page
-(async () => {
-  browser = await puppeteer.launch({ headless: (process.env.NODE_ENV == "production"), args: ["--no-sandbox", "--disable-setuid-sandbox"] })
-  page = await browser.newPage()
-  await page.emulate(iPhone)
-  await page.goto(loginUrl)
-})()
+let browser, browserStartTime
+let pages = []
+let browsers = []
+let browserInUse = false;
+
+async function pushPage () {
+  let i = pages.length
+  await browsers.push(await puppeteer.launch({ headless: (process.env.NODE_ENV == "production"), args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+  await pages.push(await browsers[i].newPage())
+  await pages[i].emulate(iPhone)
+  await pages[i].goto(loginUrl)
+  return i
+}
+pushPage()
+
 
 /**
  * Routes Definitions
@@ -202,8 +211,10 @@ app.post("/login", (req, res) => {
     let user = req.session.user
     user.username = username
     user.password = password
+
     // get start time
-    user.time.in = new Date().getTime()
+    userStartTime = new Date().getTime()
+    user.time.in = userStartTime
 
     auth(user).then(success => {
       if (success) {
@@ -304,25 +315,46 @@ app.get("/me", (req, res) => {
 
 
 async function auth(user) {
+  // default to login failure and first tab
   let success = 0
+  let currentIndex = 0
+
+  // determine when browser was set to use
+  if (((new Date().getTime() - browserStartTime) / 1000) > 10) { browserInUse = false }
+
+  // determine if browser is currently in use and began more than 60 seconds ago
+  if (browserInUse) {// && ((new Date().getTime() - browserStartTime) / 1000) < 60) {
+      // open additional pages
+      currentIndex = await pushPage()
+      // set tab index for user
+
+  }
+
+  browserInUse = true
+
+
+  user.tabIndex = currentIndex
+
   // log in
-  if (await page.url() != loginUrl) { await page.goto(loginUrl) }
+  if (await pages[currentIndex].url() != loginUrl) { await pages[currentIndex].goto(loginUrl) }
   else {
-    await page.evaluate(function() {
+    await pages[currentIndex].evaluate(function() {
       document.getElementById("username").value = ""
       document.getElementById("password").value = ""
     })
   }
-  await page.type('#username', user.username)
-  await page.type('#password', user.password)
+  await pages[currentIndex].type('#username', user.username)
+  await pages[currentIndex].type('#password', user.password)
   await Promise.all([
-    page.click('input.primary.button'),
-    page.waitForNavigation({ waitUntil: 'networkidle0' }),
+    pages[currentIndex].click('input.primary.button'),
+    pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
   ]);
 
   // determine if login succeeded
-  let location = await page.url()
-  if (location !== loginUrl) {
+  let location = await pages[currentIndex].url()
+  let splitL = location.split("/")
+  if (splitL[splitL.length-2] == "#") {
+  //if (location !== loginUrl) {
     console.log("Login successful!")
     console.log(`User: ${user.username}`)
     success = 1
@@ -333,6 +365,11 @@ async function auth(user) {
     });
     user.loggedIn = true
   } else {
+    if (currentIndex != 0) {
+      pages[currentIndex].close()
+      browsers[currentIndex].close()
+    }
+    browserInUse = false
     console.log("Login failed!")
   }
   return success
@@ -341,13 +378,14 @@ async function auth(user) {
 async function fetchGrades(user) {
   // init json
   let mobileJSON = []
+  let currentIndex = user.tabIndex
 
   // visit grades page
-  let homeUrl = await page.url()
+  let homeUrl = await pages[currentIndex].url()
   let gradesUrl = homeUrl + gradesExt
-  await page.goto(gradesUrl)
-  await page.waitForSelector(".ui-grid-row")
-  let $ = await cheerio.load(await page.content());
+  await pages[currentIndex].goto(gradesUrl)
+  await pages[currentIndex].waitForSelector(".ui-grid-row")
+  let $ = await cheerio.load(await pages[currentIndex].content());
   let row = 0, index = 0
   await $(".ui-grid-row").each(function(i, el) {
     index = 0
@@ -367,9 +405,9 @@ async function fetchGrades(user) {
 
   // get full site
   let json = []
-  await page.goto(desktopGradesUrl)
+  await pages[currentIndex].goto(desktopGradesUrl)
   row = 0, index = 0
-  $ = await cheerio.load(await page.content());
+  $ = await cheerio.load(await pages[currentIndex].content());
   await $("#dataGrid .listCell").each(function(i, el) {
     json.push({})
     index = -1
@@ -405,18 +443,18 @@ async function fetchGrades(user) {
 }
 
 async function fetchAssignments(user) {
-
+  let currentIndex = user.tabIndex
   //let assignments = []
   let assignments = [], $ = 0, row = 0, index = 0, classNum = 0
 
   await Promise.all([
-    page.click('a[title="List of assignments"]'),
-    page.waitForNavigation({ waitUntil: 'networkidle0' }),
+    pages[currentIndex].click('a[title="List of assignments"]'),
+    pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
   ]);
 
   for (let i = 0; i < user.json.length - 1; i++) {
     // repeatable code block
-    $ = await cheerio.load(await page.content())
+    $ = await cheerio.load(await pages[currentIndex].content())
     row = 0, index = 0
     await assignments.push([])
     await $(".listCell").each(function(i, el) {
@@ -439,13 +477,22 @@ async function fetchAssignments(user) {
 
     // get next page
     await Promise.all([
-      page.click('#nextButton'),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
+      pages[currentIndex].click('#nextButton'),
+      pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
   }
 
   user.assignments = assignments
   console.log("Fetched assignments!")
+
+  if (currentIndex != 0) {
+    await pages[currentIndex].close()
+    await browsers[currentIndex].close()
+  } else {
+    await pages[currentIndex].goto(loginUrl)
+  }
+  browserInUse = false
+
   return user
 }
 
@@ -480,3 +527,11 @@ if (process.env.NODE_ENV == "production") {
     console.log(`Listening to requests on http://localhost:${port}`);
   });
 }
+
+// close additional browsers every hour
+setInterval(() => {
+  for (let i = 1; i < pages.length; i++) {
+    pages[i].close()
+    browsers[i].close()
+  }
+}, 3600000) // 3,600,000 ms = 1 hr
