@@ -702,3 +702,4 @@ MigrationBackup/
 # SSL
 .cert/
 .well-known/
+.env-copy

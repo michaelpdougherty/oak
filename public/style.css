@@ -1,5 +1,10 @@
 @import url("https://fonts.googleapis.com/css?family=Raleway:800|Merriweather+Sans|Share+Tech+Mono");
 
+::-webkit-scrollbar {
+  display: none;
+}
+
+
 :root {
   --logo-font: "Share Tech Mono", monospace;
   --header-font: "Raleway", sans-serif;
@@ -41,14 +46,18 @@ body {
 
 h1,
 h2,
-h3 {
+h3
+ {
   font-family: var(--header-font);
-  text-transform: uppercase;
 
   padding: 0;
   margin: 0;
 
   color: var(--secondary);
+}
+
+h1.Banner {
+  text-transform: uppercase;
 }
 
 h1 {

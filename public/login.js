@@ -8,7 +8,7 @@ const header = document.getElementById("header");
 const err = document.getElementById("err");
 form.onsubmit = () => {
   if (!form.disabled) {
-    header.innerHTML = "PLEASE WAIT...";
+    header.innerHTML = "Please Wait...";
     go.style.display = "none";
     if (err) { err.style.display = "none"; }
     form.disabled = true;
