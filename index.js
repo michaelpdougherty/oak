@@ -14,6 +14,7 @@ const cheerio = require("cheerio");
 const winston = require("winston");
 const https = require("https");
 const fs = require("fs");
+const uuidv1 = require("uuid/v1")
 require("dotenv").config();
 
 /**
@@ -131,6 +132,9 @@ app.use(cookieParser())
 
 // config express-session
 app.use(session({
+  genid: function(req) {
+    return uuidv1() // use UUIDs for session IDs
+  },
   secret: 'fy7e89afe798wa',
   resave: false,
   saveUninitialized: false,
