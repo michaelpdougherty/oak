@@ -4,7 +4,6 @@
   display: none;
 }
 
-
 :root {
   --logo-font: "Share Tech Mono", monospace;
   --header-font: "Raleway", sans-serif;
@@ -83,15 +82,11 @@ a {
   justify-content: space-between;
   align-items: flex-start;
 
-
   height: 100%;
   width: 100%;
-
-
   padding: 20px;
 
   background-size: cover;
-
   font-family: var(--core-font);
 }
 
@@ -114,7 +109,6 @@ a {
   border-bottom: var(--ui-shawdow-border);
   box-shadow: var(--ui-shawdow);
 
-  /* new styles */
   margin-bottom: 10px;
 }
 
@@ -124,13 +118,7 @@ a {
   border-bottom: var(--ui-shawdow-border);
   box-shadow: var(--ui-shawdow);
 
-  /* new styles */
   border-radius: 3px;
-  /*
-  width: 360px;
-  position: relative;
-  bottom: 30px;
-  */
 }
 
 .Message > .Title {
@@ -147,7 +135,6 @@ a {
 }
 
 .Message > .Err {
-  /* new styles */
   margin: 0;
   padding: 0;
   font-size: 0.8rem;
@@ -164,28 +151,13 @@ a {
   display: flex;
   width: 100%;
 
-  /* new styles */
-  justify-content: center;/*space-around;*/
+  justify-content: center;
 
   align-items: center;
   padding: 0 20px;
-
-  /* new styles
-  flex-direction: column;
-  */
-}
-
-.Buffer-Top {
-  /* new styles
-  margin-top: 30px;
-  */
 }
 
 .NavButton {
-  /* new style
-  border-color: inherit;
-  */
-
   display: flex;
   justify-content: center;
   align-items: center;
@@ -193,10 +165,6 @@ a {
   height: 55px;
   width: 150px;
 
-  /* new styles
-  margin-top: 10px;
-  margin-bottom: 10px;
-  */
   margin: 5px;
 
   background: var(--highlight);
@@ -213,12 +181,10 @@ a {
   box-shadow: var(--ui-shawdow);
 }
 
-/* new styles */
 .NavButtons > a:hover {
   text-decoration: none;
 }
 
-/* new styles */
 .WelcomeView {
   background: url("oak.jpg") left top/*bottom*/;
   background-size: cover;
@@ -237,25 +203,14 @@ a {
   flex-direction: column;
 }
 
-table {
-  /*
-  max-width: 95vw;
-  overflow: hidden;
-  background-color: white;
-  padding: 30px;
-  */
-}
-
-td:first-child {
-  /*max-width: 200px;*/
-}
-
 .hover tr:hover, .hover tr:focus, .hover tr:active {
   cursor: pointer;
-  background-color: rgba(0, 0, 0, .1) !important;
+  background-color: rgba(0, 0, 0, .1);
 }
 
-.hover thead tr:hover, .hover thead tr:focus, .hover thead tr:active {
+.hover thead:hover, .hover thead:focus, .hover thead:active,
+.hover thead tr:hover, .hover thead tr:focus, .hover thead tr:active,
+.noHover:hover, .noHover:focus, .noHover:active {
   cursor: initial;
   background-color: initial;
 }
@@ -264,25 +219,47 @@ td:nth-child(2) {
   max-width: 300px;
 }
 
-.NavButton.darken:hover, .NavButton.darken:focus, .NavButton.darken:active {
+.NavButton:hover, .NavButton:focus, .NavButton:active {
   background: var(--highlight-secondary);
   border: none;
   box-shadow: none;
 }
 
-.Message/*.Assignments*/ {
+.Message {
   max-width: 95%;
   max-height: 75%;
   overflow: scroll;
 }
 
+.table td {
+  vertical-align: middle;
+}
+
+.Assignments td:first-child {
+  width: 100px;
+}
+
+.Assignments td:nth-child(2) {
+  width: 80px;
+}
+
+.Assignments td:nth-child(3) {
+  width: 80px;
+}
+
+.assignmentsClassName, .assignmentsDropdownIcon {
+  display: inline-block;
+}
+
+
+
 /* width-variable styles */
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 700px) {
   .under-600px {
     display: none;
   }
 }
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 700px) {
   .over-600px {
     display: none;
   }
@@ -292,24 +269,7 @@ td:nth-child(2) {
   td:first-child {
     padding-right: 0;
   }
-  .Assignments td:first-child {
-    max-width: 150px;
-  }
 }
-
-.table td {
-  vertical-align: middle;
-}
-
-/*
-@media only screen and (max-width: 750px) {
-  .Message {
-    max-width: 95%;
-    max-height: 75%;
-    overflow: scroll;
-  }
-}
-*/
 
 @media only screen and (max-width: 900px) {
   .over-900px {

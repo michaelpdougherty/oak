@@ -9,23 +9,29 @@ block layout-content
     div.Message.Assignments.Center.hover
       -let c = 0
       each i in user.assignments
-        table.table
-          thead
-            th(colspan="3")= user.json[c]["class"]
-          tbody
-          - let a = 0
-          each j in i
-            - let redir = `redirect(${c}, ${a})`
-            tr(onclick=redir)
-              td= j['assignmentName']
-              //-
-                td= j['dateDue']
-                td= j['dateAssigned']
-                td= j['categoryDesc']
-                td= j['categoryWeight']
-              td= j['percentage']
-              td= j['fraction']
-            - a++
+        if user.json[c]["class"] != "Student Meal"
+          table.table
+            thead(onclick='collapse(this)')
+              th(colspan="3")= user.json[c]["class"]
+              //img(src="dropdownIcon.png", height="25", width="25").assignmentsDropdownIcon
+            tbody
+              if user.assignments[c].length != 0
+                - let a = 0
+                each j in i
+                  - let redir = `redirect(${c}, ${a})`
+                  tr(onclick=redir)
+                    td= j['assignmentName']
+                    //-
+                      td= j['dateDue']
+                      td= j['dateAssigned']
+                      td= j['categoryDesc']
+                      td= j['categoryWeight']
+                    td= j['percentage']
+                    td= j['fraction']
+                  - a++
+              else
+                tr.noHover
+                  td.text-center(colspan="3") No assignments yet.
         - c++
     div.NavButtons
       a(href="/")
