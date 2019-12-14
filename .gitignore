@@ -700,6 +700,6 @@ MigrationBackup/
 .idea/
 
 # SSL
-.cert/
+.certs/
 .well-known/
 .env-copy

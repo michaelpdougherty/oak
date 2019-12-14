@@ -14,7 +14,6 @@ const cheerio = require("cheerio");
 const winston = require("winston");
 const https = require("https");
 const fs = require("fs");
-const url = require("url");
 require("dotenv").config();
 
 /**

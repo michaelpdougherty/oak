@@ -11,23 +11,21 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "body-parser": "^1.19.0",
     "browser-sync": "^2.26.7",
-    "cheerio": "^1.0.0-rc.3",
-    "cookie-parser": "^1.4.4",
-    "express-session": "^1.17.0",
-    "nodemon": "^2.0.1",
-    "puppeteer": "^2.0.0",
-    "winston": "^3.2.1"
+    "nodemon": "^2.0.1"
   },
   "dependencies": {
+    "body-parser": "^1.19.0",
+    "puppeteer": "^2.0.0",
+    "winston": "^3.2.1",
+    "cookie-parser": "^1.4.4",
+    "express-session": "^1.17.0",
     "dotenv": "^8.2.0",
+    "cheerio": "^1.0.0-rc.3",
     "express": "^4.17.1",
     "fs": "0.0.1-security",
     "https": "^1.0.0",
-    "moment": "^2.24.0",
-    "pug": "^2.0.4",
-    "url": "^0.11.0"
+    "pug": "^2.0.4"
   },
   "description": ""
 }
