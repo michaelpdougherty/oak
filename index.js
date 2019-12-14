@@ -457,6 +457,11 @@ async function fetchAssignments(user) {
     $ = await cheerio.load(await pages[currentIndex].content())
     row = 0, index = 0
     await assignments.push([])
+
+    // select all
+    // await
+    //await pages[currentIndex].select("select[name='gradeTermOid']", "");
+
     await $(".listCell").each(function(i, el) {
       index = 0
       assignments[classNum].push({})
