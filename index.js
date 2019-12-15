@@ -7,7 +7,6 @@
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
@@ -132,9 +131,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// config cookie-parser
-app.use(cookieParser())
-
 // config express-session
 app.use(session({
   store: new RedisStore({ client }),
@@ -171,7 +167,7 @@ let browserInUse = false;
 async function pushPage () {
   try {
     let i = pages.length
-    await browsers.push(await puppeteer.launch({ headless: false, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+    await browsers.push(await puppeteer.launch({ headless: process.env.HEADLESS, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
     await pages.push(await browsers[i].newPage())
     await pages[i].emulate(iPhone)
     await pages[i].goto(loginUrl)
