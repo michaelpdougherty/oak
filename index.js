@@ -159,12 +159,14 @@ let browsers = []
 let browserInUse = false;
 
 async function pushPage () {
-  let i = pages.length
-  await browsers.push(await puppeteer.launch({ headless: (process.env.NODE_ENV == "production"), args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
-  await pages.push(await browsers[i].newPage())
-  await pages[i].emulate(iPhone)
-  await pages[i].goto(loginUrl)
-  return i
+  try {
+    let i = pages.length
+    await browsers.push(await puppeteer.launch({ headless: (process.env.NODE_ENV == "production"), args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+    await pages.push(await browsers[i].newPage())
+    await pages[i].emulate(iPhone)
+    await pages[i].goto(loginUrl)
+    return i
+  } catch (err) { return console.log(err) }
 }
 pushPage()
 
@@ -247,8 +249,10 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/logout", async (req, res) => {
-    req.session.destroy()
-    //req.session.user = defaultUser
+    try {
+      await req.session.destroy()
+      //req.session.user = defaultUser
+    } catch (err) { console.log(err) }
     await res.redirect("/")
 })
 
@@ -334,8 +338,6 @@ async function auth(user) {
   }
 
   browserInUse = true
-
-
   user.tabIndex = currentIndex
 
   // log in

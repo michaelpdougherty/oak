@@ -208,8 +208,8 @@ a {
   background-color: rgba(0, 0, 0, .1);
 }
 
-.hover thead:hover, .hover thead:focus, .hover thead:active,
-.hover thead tr:hover, .hover thead tr:focus, .hover thead tr:active,
+.Grades.hover thead:hover, .Grades.hover thead:focus, .Grades.hover thead:active,
+.Grades.hover thead tr:hover, .Grades.hover thead tr:focus, .Grades.hover thead tr:active,
 .noHover:hover, .noHover:focus, .noHover:active {
   cursor: initial;
   background-color: initial;
