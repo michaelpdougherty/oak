@@ -281,6 +281,9 @@ td:nth-child(2) {
   .under-900px {
     display: none;
   }
+  .NavButton:hover {
+    transition: all 0.8s;
+  }
 }
 
 @media only screen and (min-width: 1600px) {

@@ -173,7 +173,7 @@ async function pushPage () {
     await pages[i].goto(loginUrl)
     return i
   } catch (err) {
-    req.session.user = defaultUser
+    //req.session.user = defaultUser
     return console.log(err)
   }
 }
@@ -200,7 +200,7 @@ app.get("/", (req, res) => {
 app.get("/login", (req, res) => {
   // reset user
   let user = req.session.user
-  user = defaultUser
+  //user = defaultUser
 
   let err = req.query.err
   if (!err) {
@@ -214,7 +214,7 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   // reset user
   let user = req.session.user
-  user = defaultUser
+  //user = defaultUser
 
   // get login info
   const username = req.body.username;
@@ -248,7 +248,7 @@ app.post("/login", (req, res) => {
     }).then(() => {
       req.session.save()
     }).catch(err => {
-      req.session.user = defaultUser
+      //req.session.user = defaultUser
       console.log(err)
     })
 
@@ -260,6 +260,7 @@ app.post("/login", (req, res) => {
   }
 });
 
+/*
 app.get("/logout", async (req, res) => {
     try {
       await req.session.destroy()
@@ -269,6 +270,15 @@ app.get("/logout", async (req, res) => {
       console.log(err)
     }
     await res.redirect("/")
+})
+*/
+app.get("/logout", (req, res) => {
+  req.session.destroy(function(err) {
+    if (err) {
+      console.log(err)
+    }
+    res.redirect("/")
+  })
 })
 
 app.get("/grades", (req, res) => {
@@ -326,6 +336,7 @@ app.get("/assignment", (req, res) => {
   }
 })
 
+/*
 app.get("/me", (req, res) => {
   let user = req.session.user
   if (!user.loggedIn) {
@@ -334,7 +345,7 @@ app.get("/me", (req, res) => {
     res.render("grades", { title: "Grades", user: user })
   }
 })
-
+*/
 
 async function auth(user) {
   // default to login failure and first tab
@@ -374,7 +385,6 @@ async function auth(user) {
   let location = await pages[currentIndex].url()
   let splitL = location.split("/")
   if (splitL[splitL.length-2] == "#") {
-  //if (location !== loginUrl) {
     console.log("Login successful!")
     console.log(`User: ${user.username}`)
     success = 1
