@@ -15,6 +15,7 @@ const winston = require("winston");
 const https = require("https");
 const fs = require("fs");
 const uuidv1 = require("uuid/v1")
+const redis = require("redis")
 require("dotenv").config();
 
 /**
@@ -112,6 +113,10 @@ const assignmentKeys = [
   "totalScore"
 ]
 
+// redis store
+let RedisStore = require("connect-redis")(session)
+let client = redis.createClient()
+
 /**
  *  App Configuration
  */
@@ -132,13 +137,18 @@ app.use(cookieParser())
 
 // config express-session
 app.use(session({
+  store: new RedisStore({ client }),
   genid: function(req) {
     return uuidv1() // use UUIDs for session IDs
   },
   secret: 'fy7e89afe798wa',
   resave: false,
-  saveUninitialized: false,
-  user: defaultUser
+  saveUninitialized: true,
+  user: defaultUser,
+  cookie: {
+    maxAge: 10 * 60 * 1000,
+    secure: true
+  }
 }))
 
 // initialize session
@@ -161,12 +171,15 @@ let browserInUse = false;
 async function pushPage () {
   try {
     let i = pages.length
-    await browsers.push(await puppeteer.launch({ headless: (process.env.NODE_ENV == "production"), args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+    await browsers.push(await puppeteer.launch({ headless: false, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
     await pages.push(await browsers[i].newPage())
     await pages[i].emulate(iPhone)
     await pages[i].goto(loginUrl)
     return i
-  } catch (err) { return console.log(err) }
+  } catch (err) {
+    req.session.user = defaultUser
+    return console.log(err)
+  }
 }
 pushPage()
 
@@ -238,7 +251,10 @@ app.post("/login", (req, res) => {
       return fetchAssignments(user)
     }).then(() => {
       req.session.save()
-    }).catch(err => { console.log(err) })
+    }).catch(err => {
+      req.session.user = defaultUser
+      console.log(err)
+    })
 
   } else {
     // show err
@@ -252,7 +268,10 @@ app.get("/logout", async (req, res) => {
     try {
       await req.session.destroy()
       //req.session.user = defaultUser
-    } catch (err) { console.log(err) }
+    } catch (err) {
+      //req.session.user = defaultUser
+      console.log(err)
+    }
     await res.redirect("/")
 })
 
@@ -330,14 +349,14 @@ async function auth(user) {
   if (((new Date().getTime() - browserStartTime) / 1000) > 10) { browserInUse = false }
 
   // determine if browser is currently in use and began more than 60 seconds ago
-  if (browserInUse) {// && ((new Date().getTime() - browserStartTime) / 1000) < 60) {
+  if (browserInUse) {
       // open additional pages
       currentIndex = await pushPage()
-      // set tab index for user
-
   }
-
+  // set browser to be in use
   browserInUse = true
+
+  // set tab index for user
   user.tabIndex = currentIndex
 
   // log in
@@ -371,8 +390,8 @@ async function auth(user) {
     user.loggedIn = true
   } else {
     if (currentIndex != 0) {
-      pages[currentIndex].close()
-      browsers[currentIndex].close()
+      await pages[currentIndex].close()
+      await browsers[currentIndex].close()
     }
     browserInUse = false
     console.log("Login failed!")
@@ -381,128 +400,135 @@ async function auth(user) {
 }
 
 async function fetchGrades(user) {
-  // init json
-  let mobileJSON = []
-  let currentIndex = user.tabIndex
+  if (user.loggedIn) {
+    // init json
+    let mobileJSON = []
+    let currentIndex = user.tabIndex
 
-  // visit grades page
-  let homeUrl = await pages[currentIndex].url()
-  let gradesUrl = homeUrl + gradesExt
-  await pages[currentIndex].goto(gradesUrl)
-  await pages[currentIndex].waitForSelector(".ui-grid-row")
-  let $ = await cheerio.load(await pages[currentIndex].content());
-  let row = 0, index = 0
-  await $(".ui-grid-row").each(function(i, el) {
-    index = 0
-    mobileJSON.push({})
-    let gridRow = $(this)
-    $(".ui-grid-cell", gridRow).each(function(i, el) {
-      let cell = $(this)
-      let data = trimString(cell.text())
-      if (index == 2) {
-        data = data.split(" ")[0]
-      }
-      mobileJSON[row][mobileKeys[index]] = data
-      index++
-    })
-    row++
-  })
-
-  // get full site
-  let json = []
-  await pages[currentIndex].goto(desktopGradesUrl)
-  row = 0, index = 0
-  $ = await cheerio.load(await pages[currentIndex].content());
-  await $("#dataGrid .listCell").each(function(i, el) {
-    json.push({})
-    index = -1
-    let gridRow = $(this)
-    $("td", gridRow).each(function(i, el) {
-      if (index >= 0) {
-        // do something here
+    // visit grades page
+    let homeUrl = await pages[currentIndex].url()
+    let gradesUrl = homeUrl + gradesExt
+    await pages[currentIndex].goto(gradesUrl)
+    await pages[currentIndex].waitForSelector(".ui-grid-row")
+    let $ = await cheerio.load(await pages[currentIndex].content());
+    let row = 0, index = 0
+    await $(".ui-grid-row").each(function(i, el) {
+      index = 0
+      mobileJSON.push({})
+      let gridRow = $(this)
+      $(".ui-grid-cell", gridRow).each(function(i, el) {
         let cell = $(this)
         let data = trimString(cell.text())
-        if (data) {
-          json[row][keys[index]] = data
-        } else {
-          json[row][keys[index]] = ""
+        if (index == 2) {
+          data = data.split(" ")[0]
         }
-      }
-      index++
+        mobileJSON[row][mobileKeys[index]] = data
+        index++
+      })
+      row++
     })
-    row++
-  })
 
-  // edit averages from mobileJSON
-  for (let i = 0; i < json.length; i++) {
-    // find average from current class
-    let mobileClass = mobileJSON.find(function(el) {
-      return el["class"] == json[i]["class"]
-    })
-    json[i]["average"] = mobileClass["average"]
-  }
-
-  user.json = json
-  console.log("Fetched grades!")
-  return user
-}
-
-async function fetchAssignments(user) {
-  let currentIndex = user.tabIndex
-  //let assignments = []
-  let assignments = [], $ = 0, row = 0, index = 0, classNum = 0
-
-  await Promise.all([
-    pages[currentIndex].click('a[title="List of assignments"]'),
-    pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
-  ]);
-
-  for (let i = 0; i < user.json.length - 1; i++) {
-    // repeatable code block
-    $ = await cheerio.load(await pages[currentIndex].content())
+    // get full site
+    let json = []
+    await pages[currentIndex].goto(desktopGradesUrl)
     row = 0, index = 0
-    await assignments.push([])
-
-    // select all
-    // await
-    //await pages[currentIndex].select("select[name='gradeTermOid']", "");
-
-    await $(".listCell").each(function(i, el) {
-      index = 0
-      assignments[classNum].push({})
+    $ = await cheerio.load(await pages[currentIndex].content());
+    await $("#dataGrid .listCell").each(function(i, el) {
+      json.push({})
+      index = -1
       let gridRow = $(this)
       $("td", gridRow).each(function(i, el) {
-        let cell = $(this)
-        let data = trimString(cell.text())
-        if (data == "No matching records") {
-          assignments[classNum] = []
-        } else if (assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < 11) {
-          assignments[classNum][row][assignmentKeys[index]] = data
+        if (index >= 0) {
+          // do something here
+          let cell = $(this)
+          let data = trimString(cell.text())
+          if (data) {
+            json[row][keys[index]] = data
+          } else {
+            json[row][keys[index]] = ""
+          }
         }
         index++
       })
       row++
     })
-    classNum++
 
-    // get next page
+    // edit averages from mobileJSON
+    for (let i = 0; i < json.length; i++) {
+      // find average from current class
+      let mobileClass = mobileJSON.find(function(el) {
+        return el["class"] == json[i]["class"]
+      })
+      json[i]["average"] = mobileClass["average"]
+    }
+
+    user.json = json
+    console.log("Fetched grades!")
+  }
+  return user
+}
+
+async function fetchAssignments(user) {
+  if (user.loggedIn) {
+    let currentIndex = user.tabIndex
+    //let assignments = []
+    let assignments = [], $ = 0, row = 0, index = 0, classNum = 0
+
     await Promise.all([
-      pages[currentIndex].click('#nextButton'),
+      pages[currentIndex].click('a[title="List of assignments"]'),
       pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
+
+    for (let i = 0; i < user.json.length - 1; i++) {
+      // repeatable code block
+      $ = await cheerio.load(await pages[currentIndex].content())
+      row = 0, index = 0
+      await assignments.push([])
+
+      // select all
+      // await
+      //await pages[currentIndex].select("select[name='gradeTermOid']", "");
+
+      await $(".listCell").each(function(i, el) {
+        index = 0
+        assignments[classNum].push({})
+        let gridRow = $(this)
+        $("td", gridRow).each(function(i, el) {
+          let cell = $(this)
+          let data = trimString(cell.text())
+          if (data == "No matching records") {
+            assignments[classNum] = []
+          } else if (assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < 11) {
+            assignments[classNum][row][assignmentKeys[index]] = data
+          }
+          index++
+        })
+        row++
+      })
+      classNum++
+
+      // get next page
+      if (await pages[currentIndex].$('#nextButton')) {
+        await Promise.all([
+          pages[currentIndex].click('#nextButton'),
+          pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
+        ]);
+      } else {
+        //
+      }
+    }
+
+    user.assignments = assignments
+    console.log("Fetched assignments!")
+
+    if (currentIndex != 0) {
+      await pages[currentIndex].close()
+      await browsers[currentIndex].close()
+    } else {
+      await pages[currentIndex].goto(loginUrl)
+    }
+    browserInUse = false
   }
-
-  user.assignments = assignments
-  console.log("Fetched assignments!")
-
-  if (currentIndex != 0) {
-    await pages[currentIndex].close()
-    await browsers[currentIndex].close()
-  } else {
-    await pages[currentIndex].goto(loginUrl)
-  }
-  browserInUse = false
-
   return user
 }
 

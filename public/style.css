@@ -186,7 +186,7 @@ a {
 }
 
 .WelcomeView {
-  background: url("oak.jpg") left top/*bottom*/;
+  background: url("oak.jpg") right top/*bottom*/;
   background-size: cover;
 }
 

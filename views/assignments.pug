@@ -26,8 +26,11 @@ block layout-content
                       td= j['dateAssigned']
                       td= j['categoryDesc']
                       td= j['categoryWeight']
-                    td= j['percentage']
-                    td= j['fraction']
+                    if j['percentage'] == "Ungraded"
+                      td(colspan="2").text-center= j['percentage']
+                    else
+                      td= j['percentage']
+                      td= j['fraction']
                   - a++
               else
                 tr.noHover
