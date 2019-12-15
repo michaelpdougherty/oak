@@ -75,7 +75,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 // important urls
 const loginUrl = "https://aspen.cps.edu/aspen/logon.do"
-//const homeUrl = "https://aspen.cps.edu/aspen/home.do"
 const desktopGradesUrl = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
 const gradesExt = "list/academics.classes.list"
 const fullSiteExt = "redirect?page=fullsite"
@@ -173,7 +172,6 @@ async function pushPage () {
     await pages[i].goto(loginUrl)
     return i
   } catch (err) {
-    //req.session.user = defaultUser
     return console.log(err)
   }
 }
@@ -200,13 +198,12 @@ app.get("/", (req, res) => {
 app.get("/login", (req, res) => {
   // reset user
   let user = req.session.user
-  //user = defaultUser
 
   let err = req.query.err
   if (!err) {
-    res.render("login", { title: "Welcome", user: user });
+    res.render("login", { title: "Welcome" })
   } else {
-    res.render("login", { title: "Welcome", user: user, err: err });
+    res.render("login", { title: "Welcome", err: err })
   }
 })
 
@@ -214,7 +211,6 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   // reset user
   let user = req.session.user
-  //user = defaultUser
 
   // get login info
   const username = req.body.username;
@@ -230,16 +226,15 @@ app.post("/login", (req, res) => {
     userStartTime = new Date().getTime()
     user.time.in = userStartTime
 
-    auth(user).then(success => {
-      if (success) {
+    auth(user).then(() => {
+      if (user.loggedIn) {
         user.time.elap = (new Date().getTime() - user.time.in) / 1000
         res.redirect("/")
       } else {
         res.redirect(`/login?err=${"Invalid username and/or password"}`)
       }
-      return success
-    }).then(success => {
-      //if (success) {}
+      return user
+    }).then(() => {
       return fetchGrades(user)
     }).then(() => {
       req.session.save()
@@ -248,7 +243,6 @@ app.post("/login", (req, res) => {
     }).then(() => {
       req.session.save()
     }).catch(err => {
-      //req.session.user = defaultUser
       console.log(err)
     })
 
@@ -260,18 +254,6 @@ app.post("/login", (req, res) => {
   }
 });
 
-/*
-app.get("/logout", async (req, res) => {
-    try {
-      await req.session.destroy()
-      //req.session.user = defaultUser
-    } catch (err) {
-      //req.session.user = defaultUser
-      console.log(err)
-    }
-    await res.redirect("/")
-})
-*/
 app.get("/logout", (req, res) => {
   req.session.destroy(function(err) {
     if (err) {
@@ -349,7 +331,6 @@ app.get("/me", (req, res) => {
 
 async function auth(user) {
   // default to login failure and first tab
-  let success = 0
   let currentIndex = 0
 
   // determine when browser was set to use
@@ -387,7 +368,6 @@ async function auth(user) {
   if (splitL[splitL.length-2] == "#") {
     console.log("Login successful!")
     console.log(`User: ${user.username}`)
-    success = 1
     logger.log({
       level: 'info',
       message: 'User logged in',
@@ -402,7 +382,7 @@ async function auth(user) {
     browserInUse = false
     console.log("Login failed!")
   }
-  return success
+  return user
 }
 
 async function fetchGrades(user) {
@@ -445,7 +425,6 @@ async function fetchGrades(user) {
       let gridRow = $(this)
       $("td", gridRow).each(function(i, el) {
         if (index >= 0) {
-          // do something here
           let cell = $(this)
           let data = trimString(cell.text())
           if (data) {
@@ -477,7 +456,6 @@ async function fetchGrades(user) {
 async function fetchAssignments(user) {
   if (user.loggedIn) {
     let currentIndex = user.tabIndex
-    //let assignments = []
     let assignments = [], $ = 0, row = 0, index = 0, classNum = 0
 
     await Promise.all([
@@ -491,9 +469,8 @@ async function fetchAssignments(user) {
       row = 0, index = 0
       await assignments.push([])
 
-      // select all
-      // await
-      //await pages[currentIndex].select("select[name='gradeTermOid']", "");
+      // select all from dropdown
+      // await pages[currentIndex].select("select[name='gradeTermOid']", "");
 
       await $(".listCell").each(function(i, el) {
         index = 0
@@ -519,8 +496,6 @@ async function fetchAssignments(user) {
           pages[currentIndex].click('#nextButton'),
           pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
         ]);
-      } else {
-        //
       }
     }
 
@@ -569,13 +544,3 @@ if (process.env.NODE_ENV == "production") {
     console.log(`Listening to requests on http://localhost:${port}`);
   });
 }
-
-/*
-// close additional browsers every hour
-setInterval(() => {
-  for (let i = 1; i < pages.length; i++) {
-    pages[i].close()
-    browsers[i].close()
-  }
-}, 3600000) // 3,600,000 ms = 1 hr
-*/
