@@ -536,6 +536,7 @@ if (process.env.NODE_ENV == "production") {
   });
 }
 
+/*
 // close additional browsers every hour
 setInterval(() => {
   for (let i = 1; i < pages.length; i++) {
@@ -543,3 +544,4 @@ setInterval(() => {
     browsers[i].close()
   }
 }, 3600000) // 3,600,000 ms = 1 hr
+*/
