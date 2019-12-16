@@ -4,41 +4,27 @@
  * Required External Modules
  */
 
-const express = require("express");
-const path = require("path");
-const bodyParser = require("body-parser");
-const session = require("express-session");
-const puppeteer = require("puppeteer");
-const cheerio = require("cheerio");
-const winston = require("winston");
-const https = require("https");
-const fs = require("fs");
-const uuidv1 = require("uuid/v1")
+const bodyParser = require("body-parser")
+const cheerio = require("cheerio")
+const dotenv = require("dotenv").config()
+const express = require("express")
+const fs = require("fs")
+const https = require("https")
+const path = require("path")
+const puppeteer = require("puppeteer")
 const redis = require("redis")
-require("dotenv").config();
+const session = require("express-session")
+const sleep = require('util').promisify(setTimeout)
+const uuidv1 = require("uuid/v1")
+const winston = require("winston")
 
 /**
  * App Variables
  */
 
 const app = express();
-const port = process.env.PORT || "8000";
 
-// set default user
-const defaultUser = {
-  username: "",
-  password: "",
-  loggedIn: false,
-  json: [],
-  assignments: [],
-  time: {
-    in: 0,
-    elap: 0,
-  },
-  tabIndex: 0
-}
-
-// logger
+// initialize logger
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -73,19 +59,13 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-// important urls
+// URLs for scraping
 const loginUrl = "https://aspen.cps.edu/aspen/logon.do"
 const desktopGradesUrl = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
 const gradesExt = "list/academics.classes.list"
 const fullSiteExt = "redirect?page=fullsite"
 
-/* key names */
-const mobileKeys = [
-  "class",
-  "teacher",
-  "average"
-]
-
+// key names
 const keys = [
   "class",
   "teacher",
@@ -95,6 +75,12 @@ const keys = [
   "average",
   "absences",
   "tardies"
+]
+
+const mobileKeys = [
+  "class",
+  "teacher",
+  "average"
 ]
 
 const assignmentKeys = [
@@ -111,9 +97,12 @@ const assignmentKeys = [
   "totalScore"
 ]
 
-// redis store
+// session store
 let RedisStore = require("connect-redis")(session)
 let client = redis.createClient()
+
+// last login variable
+let lastLoginTime = new Date().getTime()
 
 /**
  *  App Configuration
@@ -139,9 +128,8 @@ app.use(session({
   secret: 'fy7e89afe798wa',
   resave: false,
   saveUninitialized: true,
-  user: defaultUser,
   cookie: {
-    maxAge: 10 * 60 * 1000,
+    maxAge: 10 * 60 * 1000, // 10 min
     secure: true
   }
 }))
@@ -150,7 +138,18 @@ app.use(session({
 app.use((req, res, next) => {
   if (!req.session.initialised) {
     req.session.initialised = true;
-    req.session.user = defaultUser;
+    req.session.user = {
+      username: "",
+      password: "",
+      loggedIn: false,
+      json: [],
+      assignments: [],
+      time: {
+        in: 0,
+        elap: 0,
+      },
+      tabIndex: 0
+    };
   }
   next();
 });
@@ -197,7 +196,7 @@ app.get("/", (req, res) => {
 
 app.get("/login", (req, res) => {
   // reset user
-  let user = req.session.user
+  //let user = req.session.user
 
   let err = req.query.err
   if (!err) {
@@ -208,13 +207,23 @@ app.get("/login", (req, res) => {
 })
 
 // login handler
-app.post("/login", (req, res) => {
-  // reset user
-  let user = req.session.user
+app.post("/login", async (req, res) => {
+  // ensure logins are at least two seconds apart
+  let currentTime = await new Date().getTime()
+  if (currentTime - lastLoginTime < 3000) {
+    console.time("Slept for")
+    await sleep(3000)
+    console.timeEnd("Slept for")
+  }
+  lastLoginTime = currentTime
+
+  // get user
+  //let user = req.session.user
 
   // get login info
-  const username = req.body.username;
-  const password = req.body.password;
+  // were consts before 12.15.19
+  let username = req.body.username;
+  let password = req.body.password;
 
   if (username && password) {
     // save login to session
@@ -223,10 +232,10 @@ app.post("/login", (req, res) => {
     user.password = password
 
     // get start time
-    userStartTime = new Date().getTime()
+    userStartTime = await new Date().getTime()
     user.time.in = userStartTime
 
-    auth(user).then(() => {
+    await auth(user).then(() => {
       if (user.loggedIn) {
         user.time.elap = (new Date().getTime() - user.time.in) / 1000
         res.redirect("/")
@@ -330,11 +339,11 @@ app.get("/me", (req, res) => {
 */
 
 async function auth(user) {
-  // default to login failure and first tab
+  // default to first tab
   let currentIndex = 0
 
   // determine when browser was set to use
-  if (((new Date().getTime() - browserStartTime) / 1000) > 10) { browserInUse = false }
+  if (((await new Date().getTime() - browserStartTime) / 1000) > 100) { browserInUse = false }
 
   // determine if browser is currently in use and began more than 60 seconds ago
   if (browserInUse) {
@@ -365,22 +374,27 @@ async function auth(user) {
   // determine if login succeeded
   let location = await pages[currentIndex].url()
   let splitL = location.split("/")
+
   if (splitL[splitL.length-2] == "#") {
-    console.log("Login successful!")
+    console.log(new Date().getTime() + ": Login successful!")
     console.log(`User: ${user.username}`)
     logger.log({
       level: 'info',
       message: 'User logged in',
       user: user.username,
+      elapsedTime: user.time.elap
     });
     user.loggedIn = true
   } else {
-    if (currentIndex != 0) {
+    if (currentIndex == 0) {
+      await pages[currentIndex].goto(loginUrl)
+      browserInUse = false
+    } else {
       await pages[currentIndex].close()
       await browsers[currentIndex].close()
     }
-    browserInUse = false
-    console.log("Login failed!")
+    // log failure
+    console.log(new Date().getTime() + ": Login failed!")
   }
   return user
 }
@@ -416,7 +430,9 @@ async function fetchGrades(user) {
 
     // get full site
     let json = []
-    await pages[currentIndex].goto(desktopGradesUrl)
+    try {
+      await pages[currentIndex].goto(desktopGradesUrl)
+    } catch (err) {}
     row = 0, index = 0
     $ = await cheerio.load(await pages[currentIndex].content());
     await $("#dataGrid .listCell").each(function(i, el) {
@@ -470,7 +486,7 @@ async function fetchAssignments(user) {
       await assignments.push([])
 
       // select all from dropdown
-      // await pages[currentIndex].select("select[name='gradeTermOid']", "");
+      await pages[currentIndex].select("select[name='gradeTermOid']");
 
       await $(".listCell").each(function(i, el) {
         index = 0
@@ -532,6 +548,10 @@ const trimString = function(string) {
 /**
  * Server Activation
  */
+
+// define port
+const port = process.env.PORT || "8000";
+
 if (process.env.NODE_ENV == "production") {
   https.createServer({
     key: fs.readFileSync(process.env.KEY),

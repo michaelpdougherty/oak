@@ -269,6 +269,9 @@ td:nth-child(2) {
   td:first-child {
     padding-right: 0;
   }
+  .WelcomeView {
+    background: url("oakMobile.jpg") right top;
+  }
 }
 
 @media only screen and (max-width: 900px) {
