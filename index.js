@@ -102,7 +102,7 @@ let RedisStore = require("connect-redis")(session)
 let client = redis.createClient()
 
 // last login variable
-let lastLoginTime = new Date().getTime()
+let lastLoginTime = Date.now()
 
 /**
  *  App Configuration
@@ -165,10 +165,10 @@ let browserInUse = false;
 async function pushPage () {
   try {
     let i = pages.length
-    await browsers.push(await puppeteer.launch({ headless: process.env.HEADLESS, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+    await browsers.push(await puppeteer.launch({ headless: process.env.NODE_ENV == "production", args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
     await pages.push(await browsers[i].newPage())
     await pages[i].emulate(iPhone)
-    await pages[i].goto(loginUrl)
+    await pages[i].goto(loginUrl, { waitUntil: "domcontentloaded" })
     return i
   } catch (err) {
     return console.log(err)
@@ -209,7 +209,7 @@ app.get("/login", (req, res) => {
 // login handler
 app.post("/login", async (req, res) => {
   // ensure logins are at least two seconds apart
-  let currentTime = await new Date().getTime()
+  let currentTime = await Date.now()
   if (currentTime - lastLoginTime < 3000) {
     console.time("Slept for")
     await sleep(3000)
@@ -232,12 +232,14 @@ app.post("/login", async (req, res) => {
     user.password = password
 
     // get start time
-    userStartTime = await new Date().getTime()
+    userStartTime = await Date.now()
     user.time.in = userStartTime
 
     await auth(user).then(() => {
+      req.session.save()
+    }).then(() => {
       if (user.loggedIn) {
-        user.time.elap = (new Date().getTime() - user.time.in) / 1000
+        user.time.elap = (Date.now() - user.time.in) / 1000
         res.redirect("/")
       } else {
         res.redirect(`/login?err=${"Invalid username and/or password"}`)
@@ -343,7 +345,7 @@ async function auth(user) {
   let currentIndex = 0
 
   // determine when browser was set to use
-  if (((await new Date().getTime() - browserStartTime) / 1000) > 100) { browserInUse = false }
+  if (((await Date.now() - browserStartTime) / 1000) > 100) { browserInUse = false }
 
   // determine if browser is currently in use and began more than 60 seconds ago
   if (browserInUse) {
@@ -357,7 +359,7 @@ async function auth(user) {
   user.tabIndex = currentIndex
 
   // log in
-  if (await pages[currentIndex].url() != loginUrl) { await pages[currentIndex].goto(loginUrl) }
+  if (await pages[currentIndex].url() != loginUrl) { await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" }) }
   else {
     await pages[currentIndex].evaluate(function() {
       document.getElementById("username").value = ""
@@ -376,7 +378,7 @@ async function auth(user) {
   let splitL = location.split("/")
 
   if (splitL[splitL.length-2] == "#") {
-    console.log(new Date().getTime() + ": Login successful!")
+    console.log(Date.now() + ": Login successful!")
     console.log(`User: ${user.username}`)
     logger.log({
       level: 'info',
@@ -387,14 +389,14 @@ async function auth(user) {
     user.loggedIn = true
   } else {
     if (currentIndex == 0) {
-      await pages[currentIndex].goto(loginUrl)
+      await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" })
       browserInUse = false
     } else {
       await pages[currentIndex].close()
       await browsers[currentIndex].close()
     }
     // log failure
-    console.log(new Date().getTime() + ": Login failed!")
+    console.log(Date.now() + ": Login failed!")
   }
   return user
 }
@@ -408,7 +410,7 @@ async function fetchGrades(user) {
     // visit grades page
     let homeUrl = await pages[currentIndex].url()
     let gradesUrl = homeUrl + gradesExt
-    await pages[currentIndex].goto(gradesUrl)
+    await pages[currentIndex].goto(gradesUrl, { waitUntil: "domcontentloaded" })
     await pages[currentIndex].waitForSelector(".ui-grid-row")
     let $ = await cheerio.load(await pages[currentIndex].content());
     let row = 0, index = 0
@@ -431,7 +433,7 @@ async function fetchGrades(user) {
     // get full site
     let json = []
     try {
-      await pages[currentIndex].goto(desktopGradesUrl)
+      await pages[currentIndex].goto(desktopGradesUrl, { waitUntil: "domcontentloaded" })
     } catch (err) {}
     row = 0, index = 0
     $ = await cheerio.load(await pages[currentIndex].content());
@@ -479,6 +481,11 @@ async function fetchAssignments(user) {
       pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
 
+    // select "all" dropdown
+    // 'select[name="gradeTermOid"]'
+    await pages[currentIndex].select('select[name="gradeTermOid"]', '')
+
+
     for (let i = 0; i < user.json.length - 1; i++) {
       // repeatable code block
       $ = await cheerio.load(await pages[currentIndex].content())
@@ -522,7 +529,7 @@ async function fetchAssignments(user) {
       await pages[currentIndex].close()
       await browsers[currentIndex].close()
     } else {
-      await pages[currentIndex].goto(loginUrl)
+      await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" })
     }
     browserInUse = false
   }
