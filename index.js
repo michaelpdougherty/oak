@@ -484,6 +484,7 @@ async function fetchAssignments(user) {
     // select "all" dropdown
     // 'select[name="gradeTermOid"]'
     await pages[currentIndex].select('select[name="gradeTermOid"]', '')
+    await pages[currentIndex].waitFor(500)
 
 
     for (let i = 0; i < user.json.length - 1; i++) {
