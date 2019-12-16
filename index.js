@@ -486,7 +486,7 @@ async function fetchAssignments(user) {
       await assignments.push([])
 
       // select all from dropdown
-      await pages[currentIndex].select("select[name='gradeTermOid']");
+      //await pages[currentIndex].select("select[name='gradeTermOid']");
 
       await $(".listCell").each(function(i, el) {
         index = 0
