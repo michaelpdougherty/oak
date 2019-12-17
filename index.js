@@ -97,6 +97,7 @@ const assignmentKeys = [
   "totalScore"
 ]
 
+
 // session store
 let RedisStore = require("connect-redis")(session)
 let client = redis.createClient()
@@ -129,8 +130,8 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: {
-    maxAge: 10 * 60 * 1000, // 10 min
-    secure: true
+    maxAge: 100 * 60 * 1000, // 100 min
+    secure: (process.env.NODE_ENV == "production")
   }
 }))
 
@@ -163,16 +164,12 @@ let browsers = []
 let browserInUse = false;
 
 async function pushPage () {
-  try {
-    let i = pages.length
-    await browsers.push(await puppeteer.launch({ headless: process.env.NODE_ENV == "production", args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
-    await pages.push(await browsers[i].newPage())
-    await pages[i].emulate(iPhone)
-    await pages[i].goto(loginUrl, { waitUntil: "domcontentloaded" })
-    return i
-  } catch (err) {
-    return console.log(err)
-  }
+  let i = pages.length
+  await browsers.push(await puppeteer.launch({ headless: !(process.env.HEAD), args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+  await pages.push(await browsers[i].newPage())
+  await pages[i].emulate(iPhone)
+  await pages[i].goto(loginUrl, { waitUntil: "domcontentloaded" })
+  return i
 }
 pushPage()
 
@@ -194,10 +191,23 @@ app.get("/", (req, res) => {
   }
 });
 
-app.get("/login", (req, res) => {
-  // reset user
-  //let user = req.session.user
+/*
+// user homepage
+app.get("/home", (req, res) => {
+  let user = req.session.user
+  // check for authentication
+  if (user.loggedIn) {
+    // user is logged in
+    res.render("index", { title: "Home", user: user });
+  } else {
+    // redirect to login
+    res.redirect("/login")
+  }
+});
+ */
 
+// display login page
+app.get("/login", (req, res) => {
   let err = req.query.err
   if (!err) {
     res.render("login", { title: "Welcome" })
@@ -208,7 +218,7 @@ app.get("/login", (req, res) => {
 
 // login handler
 app.post("/login", async (req, res) => {
-  // ensure logins are at least two seconds apart
+  // ensure minimum delay between logins (may be unnecessary)
   let currentTime = await Date.now()
   if (currentTime - lastLoginTime < 3000) {
     console.time("Slept for")
@@ -217,14 +227,11 @@ app.post("/login", async (req, res) => {
   }
   lastLoginTime = currentTime
 
-  // get user
-  //let user = req.session.user
-
   // get login info
-  // were consts before 12.15.19
   let username = req.body.username;
   let password = req.body.password;
 
+  // ensure username and password are given
   if (username && password) {
     // save login to session
     let user = req.session.user
@@ -232,10 +239,38 @@ app.post("/login", async (req, res) => {
     user.password = password
 
     // get start time
-    userStartTime = await Date.now()
+    /*
+    userStartTime = Date.now()
     user.time.in = userStartTime
+    */
+    user.time.in = await Date.now();
 
+    try {
+      // authorize login
+      await auth(user);
+      if (user.loggedIn) {
+        // redirect to main page
+        user.time.elap = (await Date.now() - user.time.in) / 1000
+        await res.redirect("/")
+      } else {
+        // otherwise, show error
+        await res.redirect(`/login?err=${"Invalid username and/or password"}`)
+      }
+      // get user grades and save them to the session
+      await fetchGrades(user);
+      await req.session.save();
+      
+      // get user assignments and save them to the session
+      await fetchAssignments(user);
+      await req.session.save();
+    } catch (err) {
+      // log any errors
+      console.log(err)
+    }
+
+    /* try this without then callbacks for a while
     await auth(user).then(() => {
+      // may be unnecessary
       req.session.save()
     }).then(() => {
       if (user.loggedIn) {
@@ -244,7 +279,7 @@ app.post("/login", async (req, res) => {
       } else {
         res.redirect(`/login?err=${"Invalid username and/or password"}`)
       }
-      return user
+      //return user
     }).then(() => {
       return fetchGrades(user)
     }).then(() => {
@@ -256,15 +291,17 @@ app.post("/login", async (req, res) => {
     }).catch(err => {
       console.log(err)
     })
+    */
 
   } else {
-    // show err
+    // show err and redirect
     let err = "Please enter a username and password"
     console.log(err)
     res.redirect(`/login?err=${err}`)
   }
 });
 
+// logout handler
 app.get("/logout", (req, res) => {
   req.session.destroy(function(err) {
     if (err) {
@@ -274,14 +311,21 @@ app.get("/logout", (req, res) => {
   })
 })
 
+// display user grades
 app.get("/grades", (req, res) => {
+  // get user
   let user = req.session.user
+  
+  // ensure user is logged in
   if (!user.loggedIn) {
     res.redirect("/")
   } else {
+    // ensure grades have been gotten
     if (user.json.length) {
+      // show page
       res.render("grades", { title: "Grades", user: user })
     } else {
+      // try again after a delay
       setTimeout(() => {
         res.redirect("/grades")
       }, 350)
@@ -289,9 +333,13 @@ app.get("/grades", (req, res) => {
   }
 })
 
+// individual class page
 app.get("/class", (req, res) => {
+  // get user
   let user = req.session.user
   let index = req.query.index
+
+  // ensure user is logged in and class index is specified
   if (!user.loggedIn || !index) {
     res.redirect("/")
   } else {
@@ -299,37 +347,62 @@ app.get("/class", (req, res) => {
   }
 })
 
+// show user assignments
 app.get("/assignments", (req, res) => {
+  // get user
   let user = req.session.user
+  
+  // ensure user is logged in
   if (!user.loggedIn) {
     res.redirect("/")
   } else {
+    // check if assignments fetched yet
     if (user.assignments.length) {
       res.render("assignments", { title: "Assignments", user: user })
+    
+    // otherwise, check if grades fetched yet
+    } else if (user.json.length) {
+      // render assignment loading page
+      res.render("", { title: "Assignments", user: user })
+
+    // otherwise, try again after a delay
+    } else {
+      setTimeout(() => {
+        res.redirect("/assignments")
+      }, 350)
+    }
+    /*
     } else {
       setTimeout(() => {
         res.redirect("/assignments")
       }, 600)
     }
+    */
   }
 })
 
+// individual assignment page
 app.get("/assignment", (req, res) => {
+  // get user
   let user = req.session.user
   if (!user.loggedIn) {
     res.redirect("/")
   } else {
+    // get indexes for specific assignment
     let classIndex = req.query.class
     let assignmentIndex = req.query.assignment
+
+    // ensure they exist, otherwise redirect
     if (!(classIndex && assignmentIndex)) {
       res.redirect("/assignments")
     } else {
+      // render assignment page
       res.render("assignment", { title: "Assignment", user: user, classIndex: classIndex, assignmentIndex: assignmentIndex })
     }
   }
 })
 
-/*
+/* personal information tab, coming soon
 app.get("/me", (req, res) => {
   let user = req.session.user
   if (!user.loggedIn) {
@@ -340,6 +413,7 @@ app.get("/me", (req, res) => {
 })
 */
 
+// function to authorize user login and begin session
 async function auth(user) {
   // default to first tab
   let currentIndex = 0
@@ -358,7 +432,7 @@ async function auth(user) {
   // set tab index for user
   user.tabIndex = currentIndex
 
-  // log in
+  // log in; if browser is not at login page, go, otherwise, clear inputs
   if (await pages[currentIndex].url() != loginUrl) { await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" }) }
   else {
     await pages[currentIndex].evaluate(function() {
@@ -366,6 +440,8 @@ async function auth(user) {
       document.getElementById("password").value = ""
     })
   }
+
+  // type login information into page and click submit
   await pages[currentIndex].type('#username', user.username)
   await pages[currentIndex].type('#password', user.password)
   await Promise.all([
@@ -373,11 +449,11 @@ async function auth(user) {
     pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
   ]);
 
-  // determine if login succeeded
+  // determine if login succeeded based on new url
   let location = await pages[currentIndex].url()
   let splitL = location.split("/")
-
   if (splitL[splitL.length-2] == "#") {
+    // log success
     console.log(Date.now() + ": Login successful!")
     console.log(`User: ${user.username}`)
     logger.log({
@@ -386,11 +462,15 @@ async function auth(user) {
       user: user.username,
       elapsedTime: user.time.elap
     });
+    
+    // set user to logged in
     user.loggedIn = true
   } else {
+    // login failure, return to login url if first page
     if (currentIndex == 0) {
       await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" })
       browserInUse = false
+    // otherwise close page and browser
     } else {
       await pages[currentIndex].close()
       await browsers[currentIndex].close()
@@ -398,21 +478,27 @@ async function auth(user) {
     // log failure
     console.log(Date.now() + ": Login failed!")
   }
-  return user
+  // possibly unnecessary to return
+  //return user
 }
 
 async function fetchGrades(user) {
+  // only run if user was logged in successfully
   if (user.loggedIn) {
     // init json
     let mobileJSON = []
     let currentIndex = user.tabIndex
 
-    // visit grades page
+    // visit grades page and wait for Angular to load
     let homeUrl = await pages[currentIndex].url()
     let gradesUrl = homeUrl + gradesExt
     await pages[currentIndex].goto(gradesUrl, { waitUntil: "domcontentloaded" })
     await pages[currentIndex].waitForSelector(".ui-grid-row")
+
+    // get page as cheerio obj
     let $ = await cheerio.load(await pages[currentIndex].content());
+
+    // iterate over rows and cols in grid
     let row = 0, index = 0
     await $(".ui-grid-row").each(function(i, el) {
       index = 0
@@ -424,21 +510,34 @@ async function fetchGrades(user) {
         if (index == 2) {
           data = data.split(" ")[0]
         }
+
+        // insert data into json
         mobileJSON[row][mobileKeys[index]] = data
         index++
       })
       row++
     })
 
-    // get full site
+    /* NOTE: desktop json should be the same length as mobile json, but making
+     * that assumption might just cause trouble
+     */
+
+    // get desktop site
     let json = []
+
+    // go to assignments page, ignoring what I think is a PDF err
     try {
       await pages[currentIndex].goto(desktopGradesUrl, { waitUntil: "domcontentloaded" })
     } catch (err) {}
+
+    // iterate over rows and columns in desktop page
     row = 0, index = 0
     $ = await cheerio.load(await pages[currentIndex].content());
     await $("#dataGrid .listCell").each(function(i, el) {
+      // push new row to json
       json.push({})
+
+      // starting at -1 to avoid header row
       index = -1
       let gridRow = $(this)
       $("td", gridRow).each(function(i, el) {
@@ -446,8 +545,10 @@ async function fetchGrades(user) {
           let cell = $(this)
           let data = trimString(cell.text())
           if (data) {
+            // insert data into json
             json[row][keys[index]] = data
           } else {
+            // pass over empty cells
             json[row][keys[index]] = ""
           }
         }
@@ -465,37 +566,42 @@ async function fetchGrades(user) {
       json[i]["average"] = mobileClass["average"]
     }
 
+    // add grades to session and log
     user.json = json
     console.log("Fetched grades!")
   }
-  return user
+  // possibly unnecessary return
+  //return user
 }
 
+// fetch user assignments
 async function fetchAssignments(user) {
+  // only run if user is logged in
   if (user.loggedIn) {
+    // get index of current page
     let currentIndex = user.tabIndex
+
+    // init vars
     let assignments = [], $ = 0, row = 0, index = 0, classNum = 0
 
+    // begin assignments slideshow and wait for redirect
     await Promise.all([
       pages[currentIndex].click('a[title="List of assignments"]'),
       pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
 
-    // select "all" dropdown
+    // select "all" dropdown and wait for load
     // 'select[name="gradeTermOid"]'
     await pages[currentIndex].select('select[name="gradeTermOid"]', '')
     await pages[currentIndex].waitFor(500)
 
-
+    // iterate over all classes
     for (let i = 0; i < user.json.length - 1; i++) {
-      // repeatable code block
       $ = await cheerio.load(await pages[currentIndex].content())
       row = 0, index = 0
       await assignments.push([])
 
-      // select all from dropdown
-      //await pages[currentIndex].select("select[name='gradeTermOid']");
-
+      // iterate over rows and columns in table
       await $(".listCell").each(function(i, el) {
         index = 0
         assignments[classNum].push({})
@@ -503,9 +609,11 @@ async function fetchAssignments(user) {
         $("td", gridRow).each(function(i, el) {
           let cell = $(this)
           let data = trimString(cell.text())
+          // empty row if page reads as such
           if (data == "No matching records") {
             assignments[classNum] = []
           } else if (assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < 11) {
+            // otherwise, insert data into json
             assignments[classNum][row][assignmentKeys[index]] = data
           }
           index++
@@ -514,7 +622,7 @@ async function fetchAssignments(user) {
       })
       classNum++
 
-      // get next page
+      // get next page and wait for navigation
       if (await pages[currentIndex].$('#nextButton')) {
         await Promise.all([
           pages[currentIndex].click('#nextButton'),
@@ -523,21 +631,26 @@ async function fetchAssignments(user) {
       }
     }
 
+    // add assignments to session and log
     user.assignments = assignments
     console.log("Fetched assignments!")
 
+    // close browser window on completion if add'l ones were opened
     if (currentIndex != 0) {
       await pages[currentIndex].close()
       await browsers[currentIndex].close()
     } else {
+      // otherwise, return to the login page and reset var
       await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" })
+      browserInUse = false
     }
-    browserInUse = false
   }
-  return user
+  // return?
+  //return user
 }
 
 // helper function that trims whitespace and newline characters from the inside of strings
+// this thing is a LIFESAVER
 const trimString = function(string) {
   let split = string.split(" ");
   let currentItem = "";
@@ -560,6 +673,7 @@ const trimString = function(string) {
 // define port
 const port = process.env.PORT || "8000";
 
+// begin server with https certs or not, depending on environment
 if (process.env.NODE_ENV == "production") {
   https.createServer({
     key: fs.readFileSync(process.env.KEY),
