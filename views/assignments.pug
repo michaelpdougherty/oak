@@ -11,7 +11,7 @@ block layout-content
       each i in user.assignments
         if user.json[c]["class"] != "Student Meal"
           table.table
-            thead(onclick='collapse(this)').noActive
+            thead(onclick='collapse(this)')
               th(colspan="3")= user.json[c]["class"]
               //img(src="dropdownIcon.png", height="25", width="25").assignmentsDropdownIcon
             tbody

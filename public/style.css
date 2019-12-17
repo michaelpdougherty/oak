@@ -181,7 +181,7 @@ a {
   box-shadow: var(--ui-shawdow);
 }
 
-.NavButtons > a:hover {
+.NavButtons > a:hover, .Assignments a:hover {
   text-decoration: none;
 }
 

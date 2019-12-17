@@ -348,7 +348,7 @@ app.get("/class", (req, res) => {
 })
 
 // show user assignments
-app.get("/assignments", (req, res) => {
+app.get("/waitForAssignments", (req, res) => {
   // get user
   let user = req.session.user
   
@@ -359,27 +359,36 @@ app.get("/assignments", (req, res) => {
     // check if assignments fetched yet
     if (user.assignments.length) {
       res.render("assignments", { title: "Assignments", user: user })
-    
-    // otherwise, check if grades fetched yet
-    } else if (user.json.length) {
-      // render assignment loading page
-      res.render("", { title: "Assignments", user: user })
-
-    // otherwise, try again after a delay
     } else {
+      setTimeout(() => {
+        res.redirect("/waitForAssignments")
+      }, 600)
+    }
+  }
+})
+
+app.get("/assignments", (req, res) => {
+  // get user
+  let user = req.session.user
+
+  // ensure user is logged in
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    // check if assignments fetched
+    if (user.assignments.length) {
+      // render assignments page
+      res.render("assignments", { title: "Assignments", user: user })
+    } else if (user.json.length) {
+      res.render("waitForAssignments", { title: "Assignments", user: user })
+    } else {
+      // try again after a delay
       setTimeout(() => {
         res.redirect("/assignments")
       }, 350)
     }
-    /*
-    } else {
-      setTimeout(() => {
-        res.redirect("/assignments")
-      }, 600)
-    }
-    */
   }
-})
+});
 
 // individual assignment page
 app.get("/assignment", (req, res) => {
