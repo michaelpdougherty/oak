@@ -1,0 +1,30 @@
+extends layout
+
+block script
+  script(src="/welcome.js")
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner OAK
+    div.Dashboard
+      div.Title
+        h1 Welcome to Oak Grades!
+      div.Details
+        div Oak Grades is compatible with the Aspen gradebook system.
+        div Simply log in below with your school-issued Aspen credentials to get started!
+        div Oak Grades does not save personal information.
+      div.Shortcut
+        div.Title
+          h3 Using iOS?
+        div.Details
+          div Add our shortcut to your home screen!
+        div.NavButtons
+          a(href="https://www.icloud.com/shortcuts/d824c4aea6c346259a9b83ca6b9eff83")
+            div.NavButton Safari
+          a(href="https://www.icloud.com/shortcuts/d824c4aea6c346259a9b83ca6b9eff83")
+            div.NavButton Chrome
+    div.NavButtons
+      a(href="/login")
+        div.NavButton Log In
+      a(href="#")
+        div.NavButton Blog

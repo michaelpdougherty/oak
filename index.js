@@ -191,20 +191,19 @@ app.get("/", (req, res) => {
   }
 });
 
-/*
-// user homepage
-app.get("/home", (req, res) => {
-  let user = req.session.user
+
+// new welcome page test
+app.get("/welcome", (req, res) => {
+  //let user = req.session.user
   // check for authentication
-  if (user.loggedIn) {
+  //if (user.loggedIn) {
     // user is logged in
-    res.render("index", { title: "Home", user: user });
-  } else {
+    res.render("welcome", { title: "Welcome" });
+  //} else {
     // redirect to login
-    res.redirect("/login")
-  }
+    //res.redirect("/login")
+  //}
 });
- */
 
 // display login page
 app.get("/login", (req, res) => {
@@ -259,7 +258,7 @@ app.post("/login", async (req, res) => {
       // get user grades and save them to the session
       await fetchGrades(user);
       await req.session.save();
-      
+
       // get user assignments and save them to the session
       await fetchAssignments(user);
       await req.session.save();
@@ -315,7 +314,7 @@ app.get("/logout", (req, res) => {
 app.get("/grades", (req, res) => {
   // get user
   let user = req.session.user
-  
+
   // ensure user is logged in
   if (!user.loggedIn) {
     res.redirect("/")
@@ -351,7 +350,7 @@ app.get("/class", (req, res) => {
 app.get("/waitForAssignments", (req, res) => {
   // get user
   let user = req.session.user
-  
+
   // ensure user is logged in
   if (!user.loggedIn) {
     res.redirect("/")
@@ -471,7 +470,7 @@ async function auth(user) {
       user: user.username,
       elapsedTime: user.time.elap
     });
-    
+
     // set user to logged in
     user.loggedIn = true
   } else {

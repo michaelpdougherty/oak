@@ -7,6 +7,7 @@
 :root {
   --logo-font: "Share Tech Mono", monospace;
   --header-font: "Raleway", sans-serif;
+
   --core-font: "Merriweather Sans", sans-serif;
 
   --primary: #ffffff;
@@ -119,6 +120,11 @@ a {
   box-shadow: var(--ui-shawdow);
 
   border-radius: 3px;
+
+  /* add'l styles */
+  max-width: 95%;
+  max-height: 75%;
+  overflow: scroll;
 }
 
 .Message > .Title {
@@ -129,6 +135,55 @@ a {
 .Title.Login {
   padding-bottom: 10px;
 }
+
+/* welcome page styles */
+.Dashboard {
+  background: white;
+  padding: 30px;
+  border-bottom: var(--ui-shawdow-border);
+  box-shadow: var(--ui-shawdow);
+
+  border-radius: 3px;
+
+  margin: auto;
+
+  max-width: 95vw;
+
+}
+
+/*
+.Dashboard .Title h1 {
+  padding-bottom: 20px;
+}
+*/
+
+.Dashboard > .Shortcut {
+  padding-top: 20px;
+}
+
+.Dashboard .Details {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  line-height: 1.5em;
+}
+
+.Dashboard a {
+  text-decoration: none;
+}
+
+.Dashboard .NavButtons {
+  display: flex;
+  width: 100%;
+
+  justify-content: center;
+
+  align-items: center;
+  padding: 20px;
+}
+
+/* end welcome page styles */
+
 
 #login-form {
   padding-top: 10px;
@@ -223,12 +278,6 @@ td:nth-child(2) {
   background: var(--highlight-secondary);
   border: none;
   box-shadow: none;
-}
-
-.Message {
-  max-width: 95%;
-  max-height: 75%;
-  overflow: scroll;
 }
 
 .table td {
