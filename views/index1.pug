@@ -1,0 +1,22 @@
+extends layout
+
+//-
+  block script
+    script(src="/index.js")
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner #{user.username}
+    div.Message.Center
+      div.Title.text-center
+        h3 Welcome
+      div.NavButtons.flex-col
+        a(href="/grades")
+          div(id="gradesButton").NavButton Grades
+        a(href="/assignments")
+          div(id="assignmentsButton").NavButton Assignments
+        //-
+          a(href="/me")
+            div.NavButton Me
+        a(href="/logout")
+          div.NavButton Log Out

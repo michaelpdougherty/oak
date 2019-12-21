@@ -7,10 +7,15 @@ block layout-content
   div.View.WelcomeView
     h1(onclick="window.location='/'").Banner OAK
     div.Message.Center
+      div.Title
+        h1 Welcome to Oak Grades!
+      div.Title.Details
+        div Oak Grades is compatible with the Aspen gradebook system.
+        div We do not save any personal information.
       div.Title.Login
-        h3(id="header") Login
+        h3(id="header").text-center Login
       if err
-        div(id="err").Err #{err}
+        div(id="err").text-center.Err #{err}
       form(method="post", action="/login", id="login-form")
         div.form-group
           input(placeholder="Username", name="username", type="text", id="usernameInput").form-control
@@ -18,3 +23,23 @@ block layout-content
           input(placeholder="Password", name="password", type="password", id="passwordInput").form-control
         div.NavButtons
           button(type="submit", id="go").NavButton Go
+      //
+        div.Section
+          div.Title
+            h3 Read the blog!
+          div.Details
+            div Or don't. It's <strong>fine.</strong>
+          div.NavButtons
+            a(href="#")
+              div.NavButton Blog
+      div.Section.under-900px
+        div.Title
+          h3 Using iOS?
+        div.Details
+          div Add our shortcut to your home screen!
+          div You must allow untrusted shortcuts in Settings.
+        div.NavButtons
+          a(href="https://www.icloud.com/shortcuts/d824c4aea6c346259a9b83ca6b9eff83")
+            div.NavButton Safari
+          a(href="https://www.icloud.com/shortcuts/d824c4aea6c346259a9b83ca6b9eff83")
+            div.NavButton Chrome

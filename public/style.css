@@ -1,7 +1,19 @@
 @import url("https://fonts.googleapis.com/css?family=Raleway:800|Merriweather+Sans|Share+Tech+Mono");
 
 ::-webkit-scrollbar {
-  display: none;
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #ebebeb;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #6d6d6d;
 }
 
 :root {
@@ -125,9 +137,12 @@ a {
   max-width: 95%;
   max-height: 75%;
   overflow: scroll;
+  overflow-x: hidden;
+
+  margin: 10px;
 }
 
-.Message > .Title {
+.Message .Title {
   padding-bottom: 20px;
 }
 
@@ -136,67 +151,18 @@ a {
   padding-bottom: 10px;
 }
 
-/* welcome page styles */
-.Dashboard {
-  background: white;
-  padding: 30px;
-  border-bottom: var(--ui-shawdow-border);
-  box-shadow: var(--ui-shawdow);
-
-  border-radius: 3px;
-
-  margin: auto;
-
-  max-width: 95vw;
-
-}
-
-/*
-.Dashboard .Title h1 {
-  padding-bottom: 20px;
-}
-*/
-
-.Dashboard > .Shortcut {
-  padding-top: 20px;
-}
-
-.Dashboard .Details {
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
-  line-height: 1.5em;
-}
-
-.Dashboard a {
-  text-decoration: none;
-}
-
-.Dashboard .NavButtons {
-  display: flex;
-  width: 100%;
-
-  justify-content: center;
-
-  align-items: center;
-  padding: 20px;
-}
-
-/* end welcome page styles */
-
-
 #login-form {
   padding-top: 10px;
 }
 
-.Message > .Err {
+.Message .Err {
   margin: 0;
   padding: 0;
   font-size: 0.8rem;
   color: darkred;
 }
 
-.Message > .Details {
+.Message .Details {
   display: flex;
   flex-direction: column;
   line-height: 1.5em;
@@ -236,7 +202,7 @@ a {
   box-shadow: var(--ui-shawdow);
 }
 
-.NavButtons > a:hover, .Assignments a:hover {
+.NavButtons a:hover, .Assignments a:hover {
   text-decoration: none;
 }
 
@@ -300,7 +266,19 @@ td:nth-child(2) {
   display: inline-block;
 }
 
+#login-form input {
+  max-width: 250px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
+.Section {
+  margin-top: 30px;
+}
+
+.Section .NavButton {
+  margin-top: 15px;
+}
 
 /* width-variable styles */
 @media only screen and (min-width: 700px) {
@@ -332,6 +310,9 @@ td:nth-child(2) {
 @media only screen and (min-width: 900px) {
   .under-900px {
     display: none;
+  }
+  .LoginDiv {
+    margin-bottom: auto;
   }
   .NavButton:hover {
     transition: all 0.8s;
