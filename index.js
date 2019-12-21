@@ -187,24 +187,15 @@ app.get("/", (req, res) => {
     res.render("index", { title: "Home", user: user });
   } else {
     // redirect to login
-    res.redirect("/login")
+    if (req.query.err) {
+      res.render("login", { title: "Login", err: req.query.err })
+    } else {
+      res.render("login", { title: "Login" })
+    }
   }
 });
 
-
-// new welcome page test
-app.get("/welcome", (req, res) => {
-  //let user = req.session.user
-  // check for authentication
-  //if (user.loggedIn) {
-    // user is logged in
-    res.render("welcome", { title: "Welcome" });
-  //} else {
-    // redirect to login
-    //res.redirect("/login")
-  //}
-});
-
+/*
 // display login page
 app.get("/login", (req, res) => {
   let err = req.query.err
@@ -214,6 +205,7 @@ app.get("/login", (req, res) => {
     res.render("login", { title: "Welcome", err: err })
   }
 })
+*/
 
 // login handler
 app.post("/login", async (req, res) => {
@@ -238,10 +230,6 @@ app.post("/login", async (req, res) => {
     user.password = password
 
     // get start time
-    /*
-    userStartTime = Date.now()
-    user.time.in = userStartTime
-    */
     user.time.in = await Date.now();
 
     try {
@@ -253,7 +241,7 @@ app.post("/login", async (req, res) => {
         await res.redirect("/")
       } else {
         // otherwise, show error
-        await res.redirect(`/login?err=${"Invalid username and/or password"}`)
+        await res.redirect(`/?err=${"Invalid username and/or password"}`)
       }
       // get user grades and save them to the session
       await fetchGrades(user);
@@ -267,36 +255,11 @@ app.post("/login", async (req, res) => {
       console.log(err)
     }
 
-    /* try this without then callbacks for a while
-    await auth(user).then(() => {
-      // may be unnecessary
-      req.session.save()
-    }).then(() => {
-      if (user.loggedIn) {
-        user.time.elap = (Date.now() - user.time.in) / 1000
-        res.redirect("/")
-      } else {
-        res.redirect(`/login?err=${"Invalid username and/or password"}`)
-      }
-      //return user
-    }).then(() => {
-      return fetchGrades(user)
-    }).then(() => {
-      req.session.save()
-    }).then(() => {
-      return fetchAssignments(user)
-    }).then(() => {
-      req.session.save()
-    }).catch(err => {
-      console.log(err)
-    })
-    */
-
   } else {
     // show err and redirect
     let err = "Please enter a username and password"
     console.log(err)
-    res.redirect(`/login?err=${err}`)
+    res.redirect(`/?err=${err}`)
   }
 });
 
@@ -486,8 +449,6 @@ async function auth(user) {
     // log failure
     console.log(Date.now() + ": Login failed!")
   }
-  // possibly unnecessary to return
-  //return user
 }
 
 async function fetchGrades(user) {
@@ -578,8 +539,6 @@ async function fetchGrades(user) {
     user.json = json
     console.log("Fetched grades!")
   }
-  // possibly unnecessary return
-  //return user
 }
 
 // fetch user assignments
@@ -653,8 +612,6 @@ async function fetchAssignments(user) {
       browserInUse = false
     }
   }
-  // return?
-  //return user
 }
 
 // helper function that trims whitespace and newline characters from the inside of strings

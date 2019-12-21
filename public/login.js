@@ -10,7 +10,7 @@ form.onsubmit = (event) => {
   if (!(usernameInput.value && passwordInput.value)) {
     event.preventDefault()
     event.stopPropagation()
-    window.location="https://oakgrades.com/login?err=Please%20enter%20a%20username%20and%20password"
+    window.location="https://oakgrades.com/?err=Please%20enter%20a%20username%20and%20password"
   }
   if (!form.disabled) {
     header.innerHTML = "Please Wait...";
