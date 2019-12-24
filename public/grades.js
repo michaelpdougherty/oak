@@ -1,3 +1,3 @@
 function redirect(index) {
-  window.location=`/class?index=${index}`
+  window.location=`/classAssignments?c=${index}`
 }

@@ -23,7 +23,24 @@ block layout-content
           td= info.room
         tr
           th Average
-          td= info.average
+          - let avg = info.average
+          if avg >= 90
+            td
+              span.highlight.a= avg + " A"
+          else if avg >= 80
+            td
+              span.highlight.b= avg + " B"
+          else if avg >= 70
+            td
+              span.highlight.c= avg + " C"
+          else if avg >= 60
+            td
+              span.highlight.d= avg + " D"
+          else if avg
+            td
+              span.highlight.f= avg + " F"
+          else
+            td
         tr
           th Absences
           td= info.absences
@@ -32,6 +49,6 @@ block layout-content
           td= info.tardies
     div.NavButtons
       a(href="/grades")
-        div.NavButton Back
+        div.NavButton Grades
       a(href="/logout")
         div.NavButton Log Out

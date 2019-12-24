@@ -224,16 +224,10 @@ a {
   flex-direction: column;
 }
 
-.hover tr:hover, .hover tr:focus, .hover tr:active {
+.Assignments.hover tr:hover, .Assignments.hover tr:focus, .Assignments.hover tr:active,
+.hover tbody tr:hover, .hover tbody tr:focus, .hover tbody tr:active {
   cursor: pointer;
   background-color: rgba(0, 0, 0, .1);
-}
-
-.Grades.hover thead:hover, .Grades.hover thead:focus, .Grades.hover thead:active,
-.Grades.hover thead tr:hover, .Grades.hover thead tr:focus, .Grades.hover thead tr:active,
-.noHover:hover, .noHover:focus, .noHover:active {
-  cursor: initial;
-  background-color: initial;
 }
 
 td:nth-child(2) {
@@ -280,6 +274,36 @@ td:nth-child(2) {
   margin-top: 15px;
 }
 
+span.highlight {
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.highlight.a {
+  background-color: green;
+  color: white;
+}
+
+.highlight.b {
+  background-color: lime;
+}
+
+.highlight.c {
+  background-color: orange;
+}
+
+.highlight.d {
+  background-color: yellow;
+}
+
+.highlight.f {
+  background-color: red;
+}
+
+.averageTd {
+  min-width: 100px !important;
+}
+
 /* width-variable styles */
 @media only screen and (min-width: 700px) {
   .under-600px {
@@ -323,4 +347,11 @@ td:nth-child(2) {
   table {
     max-width: 75vw;
   }
+}
+
+.Grades.hover thead:hover, .Grades.hover thead:focus, .Grades.hover thead:active,
+.Grades.hover thead tr:hover, .Grades.hover thead tr:focus, .Grades.hover thead tr:active,
+.noHover:hover, .noHover:focus, .noHover:active {
+  cursor: initial !important;
+  background-color: rgba(0, 0, 0, 0) !important;
 }

@@ -42,7 +42,18 @@ block layout-content
               td.over-900px= user.json[n].teacher
               td.text-center.over-600px= user.json[n].semester.split("S")[1]
               td.text-center.over-600px= user.json[n].room
-              td.text-center= user.json[n].average
+              td.text-center.averageTd
+                - let avg = user.json[n].average
+                if avg >= 90
+                  span.highlight.a= avg + " A"
+                else if avg >= 80
+                  span.highlight.b= avg + " B"
+                else if avg >= 70
+                  span.highlight.c= avg + " C"
+                else if avg >= 60
+                  span.highlight.d= avg + " D"
+                else if avg
+                  span.highlight.f= avg + " F"
               td.text-center.over-600px= user.json[n].absences
               td.text-center.over-600px= user.json[n++].tardies
     div.NavButtons

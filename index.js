@@ -195,17 +195,11 @@ app.get("/", (req, res) => {
   }
 });
 
-/*
-// display login page
+
+// deprecated login route
 app.get("/login", (req, res) => {
-  let err = req.query.err
-  if (!err) {
-    res.render("login", { title: "Welcome" })
-  } else {
-    res.render("login", { title: "Welcome", err: err })
-  }
+  res.redirect("/")
 })
-*/
 
 // login handler
 app.post("/login", async (req, res) => {
@@ -352,9 +346,32 @@ app.get("/assignments", (req, res) => {
   }
 });
 
+app.get("/classAssignments", (req, res) => {
+  // get user and class index
+  let user = req.session.user
+  let classIndex = req.query.c
+
+  // ensure user is logged in
+  if (!(user.loggedIn && classIndex)) {
+    res.redirect("/")
+  } else {
+    // check if assignments fetched
+    if (user.assignments.length) {
+      // render assignments page
+      res.render("classAssignments", { title: "Assignments", user: user, c: classIndex })
+    } else {
+      // try again after a delay
+      setTimeout(() => {
+        res.redirect(req.originalUrl)
+      }, 500)
+    }
+  }
+});
+
 // individual assignment page
 app.get("/assignment", (req, res) => {
   // get user
+  console.log(req.originalUrl)
   let user = req.session.user
   if (!user.loggedIn) {
     res.redirect("/")
@@ -372,6 +389,28 @@ app.get("/assignment", (req, res) => {
     }
   }
 })
+
+// individual assignment page
+app.get("/classAssignment", (req, res) => {
+  // get user
+  let user = req.session.user
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    // get indexes for specific assignment
+    let classIndex = req.query.class
+    let assignmentIndex = req.query.assignment
+
+    // ensure they exist, otherwise redirect
+    if (!(classIndex && assignmentIndex)) {
+      res.redirect("/classAssignments")
+    } else {
+      // render assignment page
+      res.render("classAssignment", { title: "Assignment", user: user, classIndex: classIndex, assignmentIndex: assignmentIndex })
+    }
+  }
+})
+
 
 /* personal information tab, coming soon
 app.get("/me", (req, res) => {
@@ -425,7 +464,7 @@ async function auth(user) {
   let splitL = location.split("/")
   if (splitL[splitL.length-2] == "#") {
     // log success
-    console.log(Date.now() + ": Login successful!")
+    console.log(new Date().toLocaleString("en-US") + ": Login successful!")
     console.log(`User: ${user.username}`)
     logger.log({
       level: 'info',
