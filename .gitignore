@@ -703,3 +703,4 @@ MigrationBackup/
 .certs/
 .well-known/
 .env-copy
+dump.rdb
