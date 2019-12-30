@@ -38,31 +38,23 @@ const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'user-log' },
   transports: [
-    //
-    // - Write to all logs with level `info` and below to `quick-start-combined.log`.
-    // - Write all logs error (and below) to `quick-start-error.log`.
-    //
     new winston.transports.File({ filename: 'error.log', level: 'error' }),
     new winston.transports.File({ filename: 'combined.log' })
   ]
 });
 
-//
-// If we're not in production then **ALSO** log to the `console`
-// with the colorized simple format.
-//
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }));
-}
+//if (process.env.NODE_ENV !== 'production') {
+logger.add(new winston.transports.Console({
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.simple()
+  )
+}));
+//}
 
 // URLs for scraping
-const loginUrl = "https://aspen.cps.edu/aspen/logon.do"
-const desktopGradesUrl = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
+const LOGIN_URL = "https://aspen.cps.edu/aspen/logon.do"
+const ACADEMICS_URL = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
 const gradesExt = "list/academics.classes.list"
 const fullSiteExt = "redirect?page=fullsite"
 
@@ -98,10 +90,11 @@ const assignmentKeys = [
   "totalScore"
 ]
 
-
+/* try no store for a while
 // session store
 let RedisStore = require("connect-redis")(session)
 let client = redis.createClient()
+*/
 
 // last login variable
 let lastLoginTime = Date.now()
@@ -123,7 +116,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // config express-session
 app.use(session({
-  store: new RedisStore({ client }),
+  //store: new RedisStore({ client }),
   genid: function(req) {
     return uuidv1() // use UUIDs for session IDs
   },
@@ -165,7 +158,7 @@ async function pushPage () {
   await browsers.push(await puppeteer.launch({ headless: !(process.env.HEAD), args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
   await pages.push(await browsers[i].newPage())
   await pages[i].emulate(iPhone)
-  await pages[i].goto(loginUrl, { waitUntil: "domcontentloaded" })
+  await pages[i].goto(LOGIN_URL, { waitUntil: "domcontentloaded" })
   return i
 }
 pushPage()
@@ -405,6 +398,9 @@ app.get("/classAssignment", (req, res) => {
 
 // function to authorize user login and begin session
 async function auth(user) {
+  // begin timer
+  console.time("Authorized user")
+
   // default to first tab
   let currentIndex = 0
 
@@ -423,7 +419,7 @@ async function auth(user) {
   user.tabIndex = currentIndex
 
   // log in; if browser is not at login page, go, otherwise, clear inputs
-  if (await pages[currentIndex].url() != loginUrl) { await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" }) }
+  if (await pages[currentIndex].url() != LOGIN_URL) { await pages[currentIndex].goto(LOGIN_URL, { waitUntil: "domcontentloaded" }) }
   else {
     await pages[currentIndex].evaluate(function() {
       document.getElementById("username").value = ""
@@ -436,7 +432,7 @@ async function auth(user) {
   await pages[currentIndex].type('#password', user.password)
   await Promise.all([
     pages[currentIndex].click('input.primary.button'),
-    pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
+    pages[currentIndex].waitForNavigation()//{ waitUntil: 'networkidle0' }),
   ]);
 
   // determine if login succeeded based on new url
@@ -444,7 +440,8 @@ async function auth(user) {
   let splitL = location.split("/")
   if (splitL[splitL.length-2] == "#") {
     // log success
-    console.log(new Date().toLocaleString("en-US") + ": Login successful!")
+    console.timeEnd("Authorized user")
+    console.log("Login successful!")
     console.log(`User: ${user.username}`)
     logger.log({
       level: 'info',
@@ -457,7 +454,7 @@ async function auth(user) {
   } else {
     // login failure, return to login url if first page
     if (currentIndex == 0) {
-      await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" })
+      await pages[currentIndex].goto(LOGIN_URL, { waitUntil: "domcontentloaded" })
       browserInUse = false
     // otherwise close page and browser
     } else {
@@ -465,13 +462,17 @@ async function auth(user) {
       await browsers[currentIndex].close()
     }
     // log failure
-    console.log(Date.now() + ": Login failed!")
+    console.timeEnd("Authorized user")
+    console.log("Login failed!")
   }
 }
 
 async function fetchGrades(user) {
   // only run if user was logged in successfully
   if (user.loggedIn) {
+    // begin timer
+    console.time("Fetched grades!")
+
     // init json
     let mobileJSON = []
     let currentIndex = user.tabIndex
@@ -514,7 +515,7 @@ async function fetchGrades(user) {
 
     // go to assignments page, ignoring what I think is a PDF err
     try {
-      await pages[currentIndex].goto(desktopGradesUrl, { waitUntil: "domcontentloaded" })
+      await pages[currentIndex].goto(ACADEMICS_URL, { waitUntil: "domcontentloaded" })
     } catch (err) {}
 
     // iterate over rows and columns in desktop page
@@ -555,7 +556,7 @@ async function fetchGrades(user) {
 
     // add grades to session and log
     user.json = json
-    console.log("Fetched grades!")
+    console.timeEnd("Fetched grades!")
   }
 }
 
@@ -563,6 +564,9 @@ async function fetchGrades(user) {
 async function fetchAssignments(user) {
   // only run if user is logged in
   if (user.loggedIn) {
+    // begin timer
+    console.time("Fetched assignments!")
+
     // get index of current page
     let currentIndex = user.tabIndex
 
@@ -572,13 +576,14 @@ async function fetchAssignments(user) {
     // begin assignments slideshow and wait for redirect
     await Promise.all([
       pages[currentIndex].click('a[title="List of assignments"]'),
-      pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
+      pages[currentIndex].waitForNavigation({ waitUntil: 'domcontentloaded' })
     ]);
 
     // select "all" dropdown and wait for load
     // 'select[name="gradeTermOid"]'
     await pages[currentIndex].select('select[name="gradeTermOid"]', '')
     await pages[currentIndex].waitFor(500)
+    //await pages[currentIndex].waitForNavigation({ waitUntil: "domcontentloaded" })
 
     // iterate over all classes
     for (let i = 0; i < user.json.length - 1; i++) {
@@ -611,14 +616,14 @@ async function fetchAssignments(user) {
       if (await pages[currentIndex].$('#nextButton')) {
         await Promise.all([
           pages[currentIndex].click('#nextButton'),
-          pages[currentIndex].waitForNavigation({ waitUntil: 'networkidle0' }),
+          pages[currentIndex].waitForNavigation({ waitUntil: 'domcontentloaded' }),
         ]);
       }
     }
 
     // add assignments to session and log
     user.assignments = assignments
-    console.log("Fetched assignments!")
+    console.timeEnd("Fetched assignments!")
 
     // close browser window on completion if add'l ones were opened
     if (currentIndex != 0) {
@@ -626,7 +631,7 @@ async function fetchAssignments(user) {
       await browsers[currentIndex].close()
     } else {
       // otherwise, return to the login page and reset var
-      await pages[currentIndex].goto(loginUrl, { waitUntil: "domcontentloaded" })
+      await pages[currentIndex].goto(LOGIN_URL, { waitUntil: "domcontentloaded" })
       browserInUse = false
     }
   }
