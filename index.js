@@ -146,10 +146,6 @@ app.use((req, res, next) => {
       loggedIn: false,
       json: [],
       assignments: [],
-      time: {
-        in: 0,
-        elap: 0,
-      },
       tabIndex: 0
     };
   }
@@ -223,15 +219,11 @@ app.post("/login", async (req, res) => {
     user.username = username
     user.password = password
 
-    // get start time
-    user.time.in = await Date.now();
-
     try {
       // authorize login
       await auth(user);
       if (user.loggedIn) {
         // redirect to main page
-        user.time.elap = (await Date.now() - user.time.in) / 1000
         await res.redirect("/")
       } else {
         // otherwise, show error
@@ -457,8 +449,7 @@ async function auth(user) {
     logger.log({
       level: 'info',
       message: 'User logged in',
-      user: user.username,
-      elapsedTime: user.time.elap
+      user: user.username
     });
 
     // set user to logged in
