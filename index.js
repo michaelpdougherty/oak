@@ -90,11 +90,9 @@ const assignmentKeys = [
   "totalScore"
 ]
 
-/* try no store for a while
 // session store
 let RedisStore = require("connect-redis")(session)
 let client = redis.createClient()
-*/
 
 // last login variable
 let lastLoginTime = Date.now()
@@ -116,7 +114,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // config express-session
 app.use(session({
-  //store: new RedisStore({ client }),
+  store: new RedisStore({ client }),
   genid: function(req) {
     return uuidv1() // use UUIDs for session IDs
   },
