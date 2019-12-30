@@ -15,6 +15,7 @@ const puppeteer = require("puppeteer")
 const redis = require("redis")
 const session = require("express-session")
 const sleep = require('util').promisify(setTimeout)
+const ts = require('./trimString')
 const uuidv1 = require("uuid/v1")
 const winston = require("winston")
 
@@ -194,7 +195,6 @@ app.get("/", (req, res) => {
     }
   }
 });
-
 
 // deprecated login route
 app.get("/login", (req, res) => {
@@ -411,18 +411,6 @@ app.get("/classAssignment", (req, res) => {
   }
 })
 
-
-/* personal information tab, coming soon
-app.get("/me", (req, res) => {
-  let user = req.session.user
-  if (!user.loggedIn) {
-    res.redirect("/")
-  } else {
-    res.render("grades", { title: "Grades", user: user })
-  }
-})
-*/
-
 // function to authorize user login and begin session
 async function auth(user) {
   // default to first tab
@@ -514,7 +502,7 @@ async function fetchGrades(user) {
       let gridRow = $(this)
       $(".ui-grid-cell", gridRow).each(function(i, el) {
         let cell = $(this)
-        let data = trimString(cell.text())
+        let data = ts.trimString(cell.text())
         if (index == 2) {
           data = data.split(" ")[0]
         }
@@ -551,7 +539,7 @@ async function fetchGrades(user) {
       $("td", gridRow).each(function(i, el) {
         if (index >= 0) {
           let cell = $(this)
-          let data = trimString(cell.text())
+          let data = ts.trimString(cell.text())
           if (data) {
             // insert data into json
             json[row][keys[index]] = data
@@ -614,7 +602,7 @@ async function fetchAssignments(user) {
         let gridRow = $(this)
         $("td", gridRow).each(function(i, el) {
           let cell = $(this)
-          let data = trimString(cell.text())
+          let data = ts.trimString(cell.text())
           // empty row if page reads as such
           if (data == "No matching records") {
             assignments[classNum] = []
@@ -652,23 +640,6 @@ async function fetchAssignments(user) {
     }
   }
 }
-
-// helper function that trims whitespace and newline characters from the inside of strings
-// this thing is a LIFESAVER
-const trimString = function(string) {
-  let split = string.split(" ");
-  let currentItem = "";
-  let newSplit = [];
-  for (let i = 0; i < split.length; i++) {
-    if (split[i]) {
-      currentItem = split[i].trim();
-      if (currentItem) {
-        newSplit.push(currentItem);
-      }
-    }
-  }
-  return newSplit.join(" ");
-};
 
 /**
  * Server Activation
