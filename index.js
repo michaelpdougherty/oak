@@ -354,7 +354,6 @@ app.get("/classAssignments", (req, res) => {
 // individual assignment page
 app.get("/assignment", (req, res) => {
   // get user
-  console.log(req.originalUrl)
   let user = req.session.user
   if (!user.loggedIn) {
     res.redirect("/")
@@ -393,6 +392,11 @@ app.get("/classAssignment", (req, res) => {
     }
   }
 })
+
+// blog
+app.get("/blog", (req, res) => {
+  res.render("blog", { title: "Blog" });
+});
 
 // function to authorize user login and begin session
 async function auth(user) {

@@ -76,12 +76,14 @@ h1 {
   font-size: 40px;
 }
 
+/*
 a {
   color: inherit;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
 }
+*/
 
 #root {
   display: flex;

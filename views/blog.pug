@@ -1,0 +1,90 @@
+extends layout
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner Oak
+    div.Message.Center
+      div.Title
+        h1 How to Use OakGrades
+      div.Details
+        div Published January 3, 2020
+        div by Michael Dougherty
+      div.Section
+        div.Title
+          h3 Introduction
+        div.Details
+          div Welcome to the OakGrades blog. In this first post, I will be explaining how to use the OakGrades web app in its current state of development.
+          br
+          div OakGrades is certainly the simplest way to check your grades and assignments on the web, but some aspects may be confusing to new users, so I felt it important to outline all of the features OakGrades has to offer.
+      div.Section
+        div.Title
+          h3 Logging In
+        div.Details
+          div Upon visiting OakGrades, you will be met with a login and other features, including links to this blog, our official iOS shortcuts, and my personal GitHub with which OakGrades was created.
+          br
+          div In order to use OakGrades, all you have to do is log in with your school-issued Aspen credentials.
+          br
+          div Currently, OakGrades is only compatible with student accounts for the Aspen gradebook system.
+          br
+          div Parent account support will be added as soon as I have a parent account from which to test.
+          br
+          div (Any takers? Email me at <a href="mailto:oakgrades@gmail.com">oakgrades@gmail.com</a>.)
+      div.Section
+        div.Title
+          h3 Grades
+        div.Details
+          div Once you have successfully logged in, you can view your class averages and details from the “Grades” button.
+          br
+          div On this page, you can see the period, class name, teacher name, semester, room number, average, absences, and tardies for each class.
+          br
+          div On mobile devices, this information is condensed to period, teacher, and average.
+          br
+          div Highlighting and letter grades are placed about class averages based on the following scale:
+          br
+          table.table
+            thead
+              tr
+                th Percentage
+                th Letter
+                th Color
+            tbody
+              tr
+                td 90 and above
+                td A
+                td Dark Green
+              tr
+                td 80 - 89.99
+                td B
+                td Lime Green
+              tr
+                td 70 - 79.99
+                td C
+                td Yellow
+              tr
+                td 60 - 69.99
+                td D
+                td Orange
+              tr
+                td 59.99 and below
+                td F
+                td Red
+          br
+          div Clicking each row displays assignments and further information for that class.
+      div.Section
+        div.Title
+          h3 Assignments
+        div.Details
+          div There are two ways to view your assignments on OakGrades.
+          br
+          div The first is via the Grades page explained previously, which displays assignments for a particular class.
+          br
+          div The second is via the Assignments button on the homepage. This page shows assignments for all classes separated into tabs.
+          br
+          div Clicking the tab header will collapse or expand the assignments for that class.
+          br
+          div This page displays assignment names and grades received. Assignments may also be ungraded, missing, or exempt.
+          br
+          div Clicking an assignment will show further details, including class name, assignment name, date assigned, date due, category, category weight, percentage, and score.
+    div.NavButtons
+      a(href="/")
+        div.NavButton Home
