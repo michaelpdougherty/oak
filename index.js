@@ -172,7 +172,8 @@ app.get("/", (req, res) => {
   // check for authentication
   if (user.loggedIn) {
     // user is logged in
-    res.render("index", { title: "Home", user: user });
+    //res.render("index", { title: "Home", user: user });
+    res.render("grades", { title: "Grades", user: user })
   } else {
     // redirect to login
     if (req.query.err) {
@@ -213,20 +214,31 @@ app.post("/login", async (req, res) => {
     try {
       // authorize login
       await auth(user);
+      /*
       if (user.loggedIn) {
         // redirect to main page
         await res.redirect("/")
       } else {
         // otherwise, show error
         await res.redirect(`/?err=${"Invalid username and/or password"}`)
+      }*/
+      if (!user.loggedIn) {
+        await res.redirect(`/?err=${"Invalid username and/or password"}`)
       }
+
       // get user grades and save them to the session
       await fetchGrades(user);
       await req.session.save();
 
+      // log in
+      await res.redirect("/")
+
       // get user assignments and save them to the session
       await fetchAssignments(user);
       await req.session.save();
+
+
+
     } catch (err) {
       // log any errors
       console.log(err)
@@ -259,16 +271,19 @@ app.get("/grades", (req, res) => {
   if (!user.loggedIn) {
     res.redirect("/")
   } else {
+    res.render("grades", { title: "Grades", user: user })
+    /*
     // ensure grades have been gotten
-    if (user.json.length) {
+    if (user.assignments.length) {//json.length) {
       // show page
       res.render("grades", { title: "Grades", user: user })
     } else {
       // try again after a delay
       setTimeout(() => {
         res.redirect("/grades")
-      }, 350)
+      }, )
     }
+    */
   }
 })
 

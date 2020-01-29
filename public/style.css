@@ -291,11 +291,11 @@ span.highlight {
 }
 
 .highlight.c {
-  background-color: orange;
+  background-color: yellow;
 }
 
 .highlight.d {
-  background-color: yellow;
+  background-color: orange;
 }
 
 .highlight.f {
