@@ -398,10 +398,15 @@ app.get("/blog", (req, res) => {
   res.render("blog", { title: "Blog" });
 });
 
+// contact
+app.get("/contact", (req, res) => {
+  res.render("contact", { title: "Contact" });
+});
+
 // function to authorize user login and begin session
 async function auth(user) {
   // begin timer
-  console.time("Authorized user")
+  //console.time("Authorized user")
 
   // default to first tab
   let currentIndex = 0
@@ -442,7 +447,7 @@ async function auth(user) {
   let splitL = location.split("/")
   if (splitL[splitL.length-2] == "#") {
     // log success
-    console.timeEnd("Authorized user")
+    //console.timeEnd("Authorized user")
     console.log("Login successful!")
     console.log(`User: ${user.username}`)
     logger.log({
@@ -464,7 +469,7 @@ async function auth(user) {
       await browsers[currentIndex].close()
     }
     // log failure
-    console.timeEnd("Authorized user")
+    //console.timeEnd("Authorized user")
     console.log("Login failed!")
   }
 }
@@ -473,7 +478,7 @@ async function fetchGrades(user) {
   // only run if user was logged in successfully
   if (user.loggedIn) {
     // begin timer
-    console.time("Fetched grades!")
+    //console.time("Fetched grades!")
 
     // init json
     let mobileJSON = []
@@ -558,7 +563,7 @@ async function fetchGrades(user) {
 
     // add grades to session and log
     user.json = json
-    console.timeEnd("Fetched grades!")
+    //console.timeEnd("Fetched grades!")
   }
 }
 
@@ -567,7 +572,7 @@ async function fetchAssignments(user) {
   // only run if user is logged in
   if (user.loggedIn) {
     // begin timer
-    console.time("Fetched assignments!")
+    //console.time("Fetched assignments!")
 
     // get index of current page
     let currentIndex = user.tabIndex
@@ -625,7 +630,7 @@ async function fetchAssignments(user) {
 
     // add assignments to session and log
     user.assignments = assignments
-    console.timeEnd("Fetched assignments!")
+    //console.timeEnd("Fetched assignments!")
 
     // close browser window on completion if add'l ones were opened
     if (currentIndex != 0) {
