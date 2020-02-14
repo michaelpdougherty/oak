@@ -73,7 +73,7 @@ h1.Banner {
 }
 
 h1 {
-  font-size: 40px;
+  font-size: 30px;
 }
 
 /*
@@ -117,14 +117,14 @@ a {
 
   overflow: hidden;
   background: white;
-  padding: 15px;
+  padding: 5px;
 
   font-family: var(--logo-font);
 
   border-bottom: var(--ui-shawdow-border);
   box-shadow: var(--ui-shawdow);
 
-  margin-bottom: 10px;
+  /*margin-bottom: 10px;*/
 }
 
 .Message {
@@ -137,11 +137,11 @@ a {
 
   /* add'l styles */
   max-width: 95%;
-  max-height: 75%;
+  max-height: 80%;
   overflow: scroll;
   overflow-x: hidden;
 
-  margin: 10px;
+  /*margin: 10px;*/
 }
 
 .Message .Title {

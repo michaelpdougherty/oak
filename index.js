@@ -418,6 +418,66 @@ app.get("/contact", (req, res) => {
   res.render("contact", { title: "Contact" });
 });
 
+
+/*
+ *    API STUFF
+ */
+/*
+app.get("/api/auth", (req, res) => {
+  console.log(req.query.username)
+  res.send("hi")
+});
+*/
+
+app.post("/api/auth", async (req, res) => {
+  console.log("Received Mobile POST request")
+
+  // get vars
+  let username = req.body.username
+  let password = req.body.password
+  let isValid = (username && password)
+  let u = {}
+
+  // ensure both vars
+  if (isValid) {
+    // create user
+  	u	= {
+        username: username,
+        password: password,
+        loggedIn: false,
+        json: [],
+        assignments: [],
+        tabIndex: 0
+      }
+    // authorize user
+    try {
+      await auth(u)
+      await fetchGrades(u)
+      await fetchAssignments(u)
+    } catch (err) {
+      console.log(err)
+    }
+
+    if (u.loggedIn) {
+      message = "Login successful"
+    } else {
+      message = "Login failed"
+    }
+
+  } else {
+    message = "Must provide username and password"
+  }
+
+  console.log(`Mobile login: ${message}`)
+
+  res.send(JSON.stringify({
+    "message": message,
+    "user": u
+  }))
+
+});
+
+
 // function to authorize user login and begin session
 async function auth(user) {
   // begin timer
@@ -493,7 +553,7 @@ async function fetchGrades(user) {
   // only run if user was logged in successfully
   if (user.loggedIn) {
     // begin timer
-    //console.time("Fetched grades!")
+    console.time("Fetched grades!")
 
     // init json
     let mobileJSON = []
@@ -578,7 +638,7 @@ async function fetchGrades(user) {
 
     // add grades to session and log
     user.json = json
-    //console.timeEnd("Fetched grades!")
+    console.timeEnd("Fetched grades!")
   }
 }
 
@@ -587,7 +647,7 @@ async function fetchAssignments(user) {
   // only run if user is logged in
   if (user.loggedIn) {
     // begin timer
-    //console.time("Fetched assignments!")
+    console.time("Fetched assignments!")
 
     // get index of current page
     let currentIndex = user.tabIndex
@@ -645,7 +705,7 @@ async function fetchAssignments(user) {
 
     // add assignments to session and log
     user.assignments = assignments
-    //console.timeEnd("Fetched assignments!")
+    console.timeEnd("Fetched assignments!")
 
     // close browser window on completion if add'l ones were opened
     if (currentIndex != 0) {
@@ -659,7 +719,7 @@ async function fetchAssignments(user) {
   }
 }
 
-/**
+/*
  * Server Activation
  */
 
