@@ -173,7 +173,7 @@ app.get("/", (req, res) => {
   if (user.loggedIn) {
     // user is logged in
     //res.render("index", { title: "Home", user: user });
-    res.render("grades", { title: "Grades", user: user })
+    res.render("gradesAlt", { title: "Grades", user: user })
   } else {
     // redirect to login
     if (req.query.err) {
@@ -228,15 +228,16 @@ app.post("/login", async (req, res) => {
 
       // get user grades and save them to the session
       await fetchGrades(user);
+      /*
       await req.session.save();
 
       // log in
       await res.redirect("/")
-
+*/
       // get user assignments and save them to the session
       await fetchAssignments(user);
-      await req.session.save();
-
+      //await req.session.save();
+      await res.redirect("/");
 
 
     } catch (err) {
@@ -262,6 +263,11 @@ app.get("/logout", (req, res) => {
   })
 })
 
+// deprecated route(?)
+app.get("/grades", (req, res) => {
+  res.redirect("/");
+})
+/*
 // display user grades
 app.get("/grades", (req, res) => {
   // get user
@@ -272,18 +278,20 @@ app.get("/grades", (req, res) => {
     res.redirect("/")
   } else {
     res.render("grades", { title: "Grades", user: user })
-    /*
-    // ensure grades have been gotten
-    if (user.assignments.length) {//json.length) {
-      // show page
-      res.render("grades", { title: "Grades", user: user })
-    } else {
-      // try again after a delay
-      setTimeout(() => {
-        res.redirect("/grades")
-      }, )
-    }
-    */
+  }
+})
+*/
+
+// display user grades
+app.get("/gradesAlt", (req, res) => {
+  // get user
+  let user = req.session.user
+
+  // ensure user is logged in
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    res.render("gradesAlt", { title: "Grades", user: user })
   }
 })
 
@@ -500,6 +508,7 @@ async function auth(user) {
   // set tab index for user
   user.tabIndex = currentIndex
 
+  /*
   // log in; if browser is not at login page, go, otherwise, clear inputs
   if (await pages[currentIndex].url() != LOGIN_URL) { await pages[currentIndex].goto(LOGIN_URL, { waitUntil: "domcontentloaded" }) }
   else {
@@ -508,6 +517,14 @@ async function auth(user) {
       document.getElementById("password").value = ""
     })
   }
+  */
+
+  // GO TO LOGIN PAGE AND CLEAR INPUTS
+  await pages[currentIndex].goto(LOGIN_URL, { waitUntil: "domcontentloaded" });
+  await pages[currentIndex].evaluate(function() {
+    document.getElementById("username").value = ""
+    document.getElementById("password").value = ""
+  });
 
   // type login information into page and click submit
   await pages[currentIndex].type('#username', user.username)
@@ -658,14 +675,15 @@ async function fetchAssignments(user) {
     // begin assignments slideshow and wait for redirect
     await Promise.all([
       pages[currentIndex].click('a[title="List of assignments"]'),
-      pages[currentIndex].waitForNavigation({ waitUntil: 'domcontentloaded' })
+      pages[currentIndex].waitForNavigation({ waitUntil: 'domcontentloaded' }),
     ]);
 
     // select "all" dropdown and wait for load
     // 'select[name="gradeTermOid"]'
-    await pages[currentIndex].select('select[name="gradeTermOid"]', '')
-    await pages[currentIndex].waitFor(500)
+    await pages[currentIndex].select('select[name="gradeTermOid"]', '');
+    await pages[currentIndex].waitFor(250);
     //await pages[currentIndex].waitForNavigation({ waitUntil: "domcontentloaded" })
+
 
     // iterate over all classes
     for (let i = 0; i < user.json.length - 1; i++) {
@@ -720,6 +738,13 @@ async function fetchAssignments(user) {
 }
 
 /*
+// Format data
+function formatClassName(name) {
+  //
+}
+*/
+
+/*
  * Server Activation
  */
 
@@ -733,9 +758,20 @@ if (process.env.NODE_ENV == "production") {
     cert: fs.readFileSync(process.env.CER)
   }, app).listen(port, () => {
     console.log("Listening to requests on https://oakgrades.com");
-  });
+  })
 } else {
   app.listen(port, () => {
     console.log(`Listening to requests on http://localhost:${port}`);
   });
 }
+
+// create second app and listener
+const http_app = express();
+
+http_app.get("*", (req, res) => {
+  res.redirect("https://" + req.headers.host + req.url);
+});
+
+http_app.listen(80, () => {
+  console.log("Listening on port 80");
+});
