@@ -1,60 +1,163 @@
 extends layout
 
 block script
-  script(src="/grades.js")
+    script(src="/grades.js")
 
 block layout-content
-  div.View.WelcomeView
-    h1.Banner #{user.username}
-    div.Message.Grades.hover
-      table.table
-        thead.over-600px
-          th.text-center.over-900px Period
-          th.text-center.over-600px.under-900px Per
-          th.over-600px Class
-          th.over-600px Teacher
-          //th.over-600px.under-900px Tchr
-          th.text-center.over-900px Room
-          th.text-center.over-600px.under-900px Rm
-          th.text-center.over-900px Average
-          th.text-center.over-600px.under-900px Avg
-          th.text-center.over-900px Absences
-          th.text-center.over-600px.under-900px Abs
-          th.text-center.over-900px Tardies
-          th.text-center.over-600px.under-900px Tds
-        tbody
-          - let n = 0
-          each i in user.json
-            - let redir = `redirect(${n})`
-            tr(onclick=redir)
-              td.text-center= user.json[n].period.split("(")[0]
-              if user.json[n].class.split(" ")[0][1] == "S"
-                  td.over-600px= user.json[n].class.split(" ").slice(1).join(" ")
-              else
-                  td.over-600px= user.json[n].class
-              if user.json[n].class == "Student Meal"
-                td.under-600px Lunch
-                td.under-900px.over-600px= user.json[n].teacher.split(",")[0]
-              else
-                td.under-900px= user.json[n].teacher.split(",")[0]
-              td.over-900px= user.json[n].teacher
-              td.text-center.over-600px= user.json[n].room
-              td.text-center.averageTd
-                - let avg = user.json[n].average
+  div.View.WelcomeView(id="cardsView")
+    h1.Banner.Uppercase #{user.username}
+    div.FlexContainer
+      - let n = 0
+      each val in user.json
+        - let fPeriod = val.period.split("(")[0]
+
+        - let tchs = val.teacher.split("; ")
+        - let ftch
+        if tchs.length === 1
+          - ftch = `${val.teacher.split(", ")[1]} ${val.teacher.split(", ")[0]}`
+        else
+          - let tArr = []
+          - let splt
+          each i in tchs
+            - splt = i.split(", ")
+            - tArr.push(`${splt[1]} ${splt[0]}`)
+          - ftch = tArr.join(", ")
+
+        - let fClass = val.class
+        - let sClass = fClass.split(" ")
+        - let avg = val.average
+        if sClass[0][1] === "S"
+          - fClass = sClass.slice(1).join(" ")
+        - let redir = `expand(${n})`
+        div.FlexItem.Message(onclick=redir)
+          table.table.FlexTable.FlexTableTop
+            tr.FlexHeadingRow
+              td.FlexHeading Period
+              td.FlexHeading Room
+              td.FlexHeading Absences
+              td.FlexHeading Tardies
+            tr.FlexHeadingRowBottom
+              td.FlexHeadingBottom= fPeriod
+              td.FlexHeadingBottom= val.room
+              td.FlexHeadingBottom= val.absences
+              td.FlexHeadingBottom= val.tardies
+          table.table.FlexTable.FlexTableBottom
+            tr
+              td= fClass
+              td(rowspan=2).Avg
                 if avg >= 90
-                  span.highlight.a= avg + " A"
+                  span.highlight.a= `${avg} A`
                 else if avg >= 80
-                  span.highlight.b= avg + " B"
+                  span.highlight.b= `${avg} B`
                 else if avg >= 70
-                  span.highlight.c= avg + " C"
+                  span.highlight.c= `${avg} C`
                 else if avg >= 60
-                  span.highlight.d= avg + " D"
+                  span.highlight.d= `${avg} D`
                 else if avg
-                  span.highlight.f= avg + " F"
-              td.text-center.over-600px= user.json[n].absences
-              td.text-center.over-600px= user.json[n++].tardies
+                  span.highlight.f= `${avg} F`
+            tr
+              if val.teacher
+                td= ftch
+        - n++
     div.NavButtons
-      a(href="/gradesAlt")
-        div.NavButton Change View
+      //
+        a(href="/grades")
+          div.NavButton Change View
       a(href="/logout")
         div.NavButton Log Out
+  each val in user.json
+    div.View
+      - let fPeriod = val.period.split("(")[0]
+
+      - let tchs = val.teacher.split("; ")
+      - let ftch
+      if tchs.length === 1
+        - ftch = `${val.teacher.split(", ")[1]} ${val.teacher.split(", ")[0]}`
+      else
+        - let tArr = []
+        - let splt
+        each i in tchs
+          - splt = i.split(", ")
+          - tArr.push(`${splt[1]} ${splt[0]}`)
+        - ftch = tArr.join(", ")
+
+      - let fClass = val.class
+      - let sClass = fClass.split(" ")
+      - let avg = val.average
+      - let index = n - 1
+      if fPeriod !== "HR"
+        - index = parseInt(fPeriod) - 1
+      if sClass[0][1] === "S"
+        - fClass = sClass.slice(1).join(" ")
+      div.mainContainer
+        h1.BannerTwo= fClass
+        table.table.FlexTable.FlexTableTop
+          tr.FlexHeadingRow
+            td.FlexHeading Period
+            td.FlexHeading Room
+            td.FlexHeading Absences
+            td.FlexHeading Tardies
+          tr.FlexHeadingRowBottom
+            td.FlexHeadingBottom= fPeriod
+            td.FlexHeadingBottom= val.room
+            td.FlexHeadingBottom= val.absences
+            td.FlexHeadingBottom= val.tardies
+        table.table.FlexTable.FlexTableBottom
+          tr
+            if val.teacher
+              td= ftch
+            td.Avg
+              if avg >= 90
+                span.highlight.a #{avg} A
+              else if avg >= 80
+                span.highlight.b #{avg} B
+              else if avg >= 70
+                span.highlight.c #{avg} C
+              else if avg >= 60
+                span.highlight.d #{avg} D
+              else if avg
+                span.highlight.f #{avg} F
+      div.BigAssignmentBox
+        h2.BannerThree Assignments
+        div.AssignmentBox
+          if index < user.assignments.length
+            if user.assignments[index].length > 0
+              each i in user.assignments[index]
+                - let pp = parseInt(i.percentage)
+                div.Message.AssignmentMessage
+                  p.AssignmentName= i.assignmentName
+                  div
+                    if i.percentage.toUpperCase() === "E"
+                      p.Percentage Exempt
+                    else if i.percentage === "Ungraded" || i.fraction === "Ungraded"
+                      p.Percentage Ungraded
+                    else if i.percentage === "Inc"
+                      p.Percentage Incomplete
+                    else
+                      p.Score #{i.fraction}
+                      p.Percentage
+                        if pp > 90
+                          span.highlight.a #{i.percentage.split("%")[0]} A
+                        else if pp > 80
+                          span.highlight.b #{i.percentage.split("%")[0]} B
+                        else if pp > 70
+                          span.highlight.c #{i.percentage.split("%")[0]} C
+                        else if pp > 60
+                          span.highlight.d #{i.percentage.split("%")[0]} D
+                        else if !isNaN(pp)
+                          span.highlight.f #{i.percentage.split("%")[0]} F
+                        else
+                          span #{i.percentage}
+                  div
+                    if i.dateAssigned === i.dateDue
+                      p.DateAssigned= i.dateAssigned.split("/").join(".")
+                    else
+                      p.DateAssigned #{i.dateAssigned.split("/").join(".")}
+                      p.DateDue #{i.dateDue.split("/").join(".")}
+                    p.Category #{i.categoryDesc} | #{i.categoryWeight}%
+            else
+              div(style="margin-left: auto; margin-right: auto;").Message.AssignmentMessage No assignments
+          else
+            div(style="margin-left: auto; margin-right: auto;").Message.AssignmentMessage No assignments
+      div.NavButtons
+        div(onclick="expand('close')").NavButton Back

@@ -173,7 +173,7 @@ app.get("/", (req, res) => {
   if (user.loggedIn) {
     // user is logged in
     //res.render("index", { title: "Home", user: user });
-    res.render("gradesAlt", { title: "Grades", user: user })
+    res.render("grades", { title: "Grades", user: user })
   } else {
     // redirect to login
     if (req.query.err) {
@@ -184,10 +184,6 @@ app.get("/", (req, res) => {
   }
 });
 
-// deprecated login route
-app.get("/login", (req, res) => {
-  res.redirect("/")
-})
 
 // login handler
 app.post("/login", async (req, res) => {
@@ -198,6 +194,7 @@ app.post("/login", async (req, res) => {
     await sleep(3000)
     console.timeEnd("Slept for")
   }
+  // update login time
   lastLoginTime = currentTime
 
   // get login info
@@ -210,41 +207,23 @@ app.post("/login", async (req, res) => {
     let user = req.session.user
     user.username = username
     user.password = password
-
     try {
       // authorize login
       await auth(user);
-      /*
-      if (user.loggedIn) {
-        // redirect to main page
-        await res.redirect("/")
-      } else {
-        // otherwise, show error
-        await res.redirect(`/?err=${"Invalid username and/or password"}`)
-      }*/
       if (!user.loggedIn) {
         await res.redirect(`/?err=${"Invalid username and/or password"}`)
+      } else {
+        // get user grades and save them to the session
+        await fetchGrades(user);
+        // get user assignments and save them to the session
+        await fetchAssignments(user);
+        //await req.session.save();
+        await res.redirect("/");
       }
-
-      // get user grades and save them to the session
-      await fetchGrades(user);
-      /*
-      await req.session.save();
-
-      // log in
-      await res.redirect("/")
-*/
-      // get user assignments and save them to the session
-      await fetchAssignments(user);
-      //await req.session.save();
-      await res.redirect("/");
-
-
     } catch (err) {
       // log any errors
       console.log(err)
     }
-
   } else {
     // show err and redirect
     let err = "Please enter a username and password"
@@ -252,6 +231,13 @@ app.post("/login", async (req, res) => {
     res.redirect(`/?err=${err}`)
   }
 });
+
+
+// contact
+app.get("/contact", (req, res) => {
+  res.render("contact", { title: "Contact" });
+});
+
 
 // logout handler
 app.get("/logout", (req, res) => {
@@ -263,179 +249,22 @@ app.get("/logout", (req, res) => {
   })
 })
 
-// deprecated route(?)
+
+// deprecated routes
 app.get("/grades", (req, res) => {
   res.redirect("/");
 })
-/*
-// display user grades
-app.get("/grades", (req, res) => {
-  // get user
-  let user = req.session.user
-
-  // ensure user is logged in
-  if (!user.loggedIn) {
-    res.redirect("/")
-  } else {
-    res.render("grades", { title: "Grades", user: user })
-  }
+app.get("/login", (req, res) => {
+  res.redirect("/")
 })
-*/
-
-// display user grades
-app.get("/gradesAlt", (req, res) => {
-  // get user
-  let user = req.session.user
-
-  // ensure user is logged in
-  if (!user.loggedIn) {
-    res.redirect("/")
-  } else {
-    res.render("gradesAlt", { title: "Grades", user: user })
-  }
-})
-
-// individual class page
-app.get("/class", (req, res) => {
-  // get user
-  let user = req.session.user
-  let index = req.query.index
-
-  // ensure user is logged in and class index is specified
-  if (!user.loggedIn || !index) {
-    res.redirect("/")
-  } else {
-    res.render("class", { title: "Class", user: user, index: index })
-  }
-})
-
-// show user assignments
-app.get("/waitForAssignments", (req, res) => {
-  // get user
-  let user = req.session.user
-
-  // ensure user is logged in
-  if (!user.loggedIn) {
-    res.redirect("/")
-  } else {
-    // check if assignments fetched yet
-    if (user.assignments.length) {
-      res.render("assignments", { title: "Assignments", user: user })
-    } else {
-      setTimeout(() => {
-        res.redirect("/waitForAssignments")
-      }, 600)
-    }
-  }
-})
-
-app.get("/assignments", (req, res) => {
-  // get user
-  let user = req.session.user
-
-  // ensure user is logged in
-  if (!user.loggedIn) {
-    res.redirect("/")
-  } else {
-    // check if assignments fetched
-    if (user.assignments.length) {
-      // render assignments page
-      res.render("assignments", { title: "Assignments", user: user })
-    } else if (user.json.length) {
-      res.render("waitForAssignments", { title: "Assignments", user: user })
-    } else {
-      // try again after a delay
-      setTimeout(() => {
-        res.redirect("/assignments")
-      }, 350)
-    }
-  }
-});
-
-app.get("/classAssignments", (req, res) => {
-  // get user and class index
-  let user = req.session.user
-  let classIndex = req.query.c
-
-  // ensure user is logged in
-  if (!(user.loggedIn && classIndex)) {
-    res.redirect("/")
-  } else {
-    // check if assignments fetched
-    if (user.assignments.length) {
-      // render assignments page
-      res.render("classAssignments", { title: "Assignments", user: user, c: classIndex })
-    } else {
-      // try again after a delay
-      setTimeout(() => {
-        res.redirect(req.originalUrl)
-      }, 500)
-    }
-  }
-});
-
-// individual assignment page
-app.get("/assignment", (req, res) => {
-  // get user
-  let user = req.session.user
-  if (!user.loggedIn) {
-    res.redirect("/")
-  } else {
-    // get indexes for specific assignment
-    let classIndex = req.query.class
-    let assignmentIndex = req.query.assignment
-
-    // ensure they exist, otherwise redirect
-    if (!(classIndex && assignmentIndex)) {
-      res.redirect("/assignments")
-    } else {
-      // render assignment page
-      res.render("assignment", { title: "Assignment", user: user, classIndex: classIndex, assignmentIndex: assignmentIndex })
-    }
-  }
-})
-
-// individual assignment page
-app.get("/classAssignment", (req, res) => {
-  // get user
-  let user = req.session.user
-  if (!user.loggedIn) {
-    res.redirect("/")
-  } else {
-    // get indexes for specific assignment
-    let classIndex = req.query.class
-    let assignmentIndex = req.query.assignment
-
-    // ensure they exist, otherwise redirect
-    if (!(classIndex && assignmentIndex)) {
-      res.redirect("/classAssignments")
-    } else {
-      // render assignment page
-      res.render("classAssignment", { title: "Assignment", user: user, classIndex: classIndex, assignmentIndex: assignmentIndex })
-    }
-  }
-})
-
-// blog
 app.get("/blog", (req, res) => {
-  res.render("blog", { title: "Blog" });
-});
-
-// contact
-app.get("/contact", (req, res) => {
-  res.render("contact", { title: "Contact" });
+  res.redirect("/")
 });
 
 
 /*
  *    API STUFF
  */
-/*
-app.get("/api/auth", (req, res) => {
-  console.log(req.query.username)
-  res.send("hi")
-});
-*/
 
 app.post("/api/auth", async (req, res) => {
   console.log("Received Mobile POST request")
@@ -562,7 +391,7 @@ async function auth(user) {
     }
     // log failure
     //console.timeEnd("Authorized user")
-    console.log("Login failed!")
+    console.log("Login failed!", user.username)
   }
 }
 

@@ -562,3 +562,11 @@ span.highlight {
 .Message::-webkit-scrollbar, .FlexContainer::-webkit-scrollbar:horizontal {
   display: none;
 }
+
+#brandMessage {
+  font-family: var(--core-font);
+  font-weight: 400;
+  font-size: 0.4em;
+  margin-top: 0;
+  padding-top: 0;
+}

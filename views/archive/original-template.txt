@@ -1,0 +1,122 @@
+/*
+// individual class page
+app.get("/class", (req, res) => {
+  // get user
+  let user = req.session.user
+  let index = req.query.index
+
+  // ensure user is logged in and class index is specified
+  if (!user.loggedIn || !index) {
+    res.redirect("/")
+  } else {
+    res.render("class", { title: "Class", user: user, index: index })
+  }
+})
+
+// show user assignments
+app.get("/waitForAssignments", (req, res) => {
+  // get user
+  let user = req.session.user
+
+  // ensure user is logged in
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    // check if assignments fetched yet
+    if (user.assignments.length) {
+      res.render("assignments", { title: "Assignments", user: user })
+    } else {
+      setTimeout(() => {
+        res.redirect("/waitForAssignments")
+      }, 600)
+    }
+  }
+})
+
+
+app.get("/assignments", (req, res) => {
+  // get user
+  let user = req.session.user
+
+  // ensure user is logged in
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    // check if assignments fetched
+    if (user.assignments.length) {
+      // render assignments page
+      res.render("assignments", { title: "Assignments", user: user })
+    } else if (user.json.length) {
+      res.render("waitForAssignments", { title: "Assignments", user: user })
+    } else {
+      // try again after a delay
+      setTimeout(() => {
+        res.redirect("/assignments")
+      }, 350)
+    }
+  }
+});
+
+app.get("/classAssignments", (req, res) => {
+  // get user and class index
+  let user = req.session.user
+  let classIndex = req.query.c
+
+  // ensure user is logged in
+  if (!(user.loggedIn && classIndex)) {
+    res.redirect("/")
+  } else {
+    // check if assignments fetched
+    if (user.assignments.length) {
+      // render assignments page
+      res.render("classAssignments", { title: "Assignments", user: user, c: classIndex })
+    } else {
+      // try again after a delay
+      setTimeout(() => {
+        res.redirect(req.originalUrl)
+      }, 500)
+    }
+  }
+});
+
+// individual assignment page
+app.get("/assignment", (req, res) => {
+  // get user
+  let user = req.session.user
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    // get indexes for specific assignment
+    let classIndex = req.query.class
+    let assignmentIndex = req.query.assignment
+
+    // ensure they exist, otherwise redirect
+    if (!(classIndex && assignmentIndex)) {
+      res.redirect("/assignments")
+    } else {
+      // render assignment page
+      res.render("assignment", { title: "Assignment", user: user, classIndex: classIndex, assignmentIndex: assignmentIndex })
+    }
+  }
+})
+
+// individual assignment page
+app.get("/classAssignment", (req, res) => {
+  // get user
+  let user = req.session.user
+  if (!user.loggedIn) {
+    res.redirect("/")
+  } else {
+    // get indexes for specific assignment
+    let classIndex = req.query.class
+    let assignmentIndex = req.query.assignment
+
+    // ensure they exist, otherwise redirect
+    if (!(classIndex && assignmentIndex)) {
+      res.redirect("/classAssignments")
+    } else {
+      // render assignment page
+      res.render("classAssignment", { title: "Assignment", user: user, classIndex: classIndex, assignmentIndex: assignmentIndex })
+    }
+  }
+})
