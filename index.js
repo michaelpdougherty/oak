@@ -42,14 +42,12 @@ const logger = winston.createLogger({
   ]
 });
 
-//if (process.env.NODE_ENV !== 'production') {
 logger.add(new winston.transports.Console({
   format: winston.format.combine(
     winston.format.colorize(),
     winston.format.simple()
   )
 }));
-//}
 
 // URLs for scraping
 const LOGIN_URL = "https://aspen.cps.edu/aspen/logon.do"
@@ -117,7 +115,7 @@ app.use(session({
   saveUninitialized: true,
   cookie: {
     maxAge: 100 * 60 * 1000, // 100 min
-    secure: (process.env.NODE_ENV == "production")
+    secure: true
   }
 }))
 
@@ -147,7 +145,7 @@ let browserInUse = false;
 
 async function pushPage () {
   let i = pages.length
-  await browsers.push(await puppeteer.launch({ headless: !(process.env.HEAD), args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+  await browsers.push(await puppeteer.launch({ headless: false, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
   await pages.push(await browsers[i].newPage())
   await pages[i].emulate(iPhone)
   await pages[i].goto(LOGIN_URL, { waitUntil: "domcontentloaded" })
@@ -256,65 +254,8 @@ app.get("/blog", (req, res) => {
   res.redirect("/")
 });
 
-
-/*
- *    API STUFF
- */
-
-app.post("/api/auth", async (req, res) => {
-  console.log("Received Mobile POST request")
-
-  // get vars
-  let username = req.body.username
-  let password = req.body.password
-  let isValid = (username && password)
-  let u = {}
-
-  // ensure both vars
-  if (isValid) {
-    // create user
-  	u	= {
-        username: username,
-        password: password,
-        loggedIn: false,
-        json: [],
-        assignments: [],
-        tabIndex: 0
-      }
-    // authorize user
-    try {
-      await auth(u)
-      await fetchGrades(u)
-      await fetchAssignments(u)
-    } catch (err) {
-      console.log(err)
-    }
-
-    if (u.loggedIn) {
-      message = "Login successful"
-    } else {
-      message = "Login failed"
-    }
-
-  } else {
-    message = "Must provide username and password"
-  }
-
-  console.log(`Mobile login: ${message}`)
-
-  res.send(JSON.stringify({
-    "message": message,
-    "user": u
-  }))
-
-});
-
-
 // function to authorize user login and begin session
 async function auth(user) {
-  // begin timer
-  //console.time("Authorized user")
-
   // default to first tab
   let currentIndex = 0
 
@@ -331,17 +272,6 @@ async function auth(user) {
 
   // set tab index for user
   user.tabIndex = currentIndex
-
-  /*
-  // log in; if browser is not at login page, go, otherwise, clear inputs
-  if (await pages[currentIndex].url() != LOGIN_URL) { await pages[currentIndex].goto(LOGIN_URL, { waitUntil: "domcontentloaded" }) }
-  else {
-    await pages[currentIndex].evaluate(function() {
-      document.getElementById("username").value = ""
-      document.getElementById("password").value = ""
-    })
-  }
-  */
 
   // GO TO LOGIN PAGE AND CLEAR INPUTS
   await pages[currentIndex].goto(LOGIN_URL, { waitUntil: "domcontentloaded" });
@@ -428,10 +358,6 @@ async function fetchGrades(user) {
       })
       row++
     })
-
-    /* NOTE: desktop json should be the same length as mobile json, but making
-     * that assumption might just cause trouble
-     */
 
     // get desktop site
     let json = []
@@ -571,7 +497,7 @@ https.createServer({
   key: fs.readFileSync(process.env.KEY),
   cert: fs.readFileSync(process.env.CER)
 }, app).listen(port, () => {
-  console.log("Server is running at https://oakgrades.com");
+  console.log(`Server is running at ${process.env.DOMAIN}`);
 })
 
 // HTTP REDIRECT
