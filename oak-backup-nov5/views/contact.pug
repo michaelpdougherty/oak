@@ -1,0 +1,32 @@
+extends layout
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner Oak
+    div.Message.Center
+      div.Title
+        h1 Contact
+      div.Details
+        div Questions, Comments, or Concerns?
+        div Email us at <a href="mailto:oakgrades@gmail.com">oakgrades@gmail.com</a>.
+        div All feedback is appreciated.
+        div Business queries welcome.
+      div.Section
+        div.Title
+          h3 Donate
+        div.Details
+          div Donate to support us here:
+          div.NavButtons
+            a(href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=mikedough213%40gmail.com&currency_code=USD&source=url")
+              div.NavButton Donate
+      div.Section
+        div.Title
+          h3 Taft Wrestling
+        div.Details
+          div Check out another website:
+          div.NavButtons
+            a(href="https://taftwrestling.org")
+              div.NavButton Go
+    div.NavButtons
+      a(href="/")
+        div.NavButton Home

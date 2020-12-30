@@ -168,8 +168,7 @@ pushPage()
 
 // welcome page
 app.get("/", (req, res) => {
-  let user = req.session.user;
-
+  let user = req.session.user
   // check for authentication
   if (user.loggedIn) {
     // user is logged in
@@ -576,12 +575,12 @@ function formatClassName(name) {
 
 /*
  * Server Activation
-*/
+
 
 // define port
-//const port = process.env.PORT || "8000";
+const port = process.env.PORT || "8000";
+
 // begin server with https certs or not, depending on environment
-/*
 if (process.env.NODE_ENV == "production") {
   https.createServer({
     key: fs.readFileSync(process.env.KEY),
@@ -594,17 +593,8 @@ if (process.env.NODE_ENV == "production") {
     console.log(`Listening to requests on http://localhost:${port}`);
   });
 }
-*/
 
-// HTTPS SERVER
-const port = "443";
-https.createServer({
-  key: fs.readFileSync(process.env.KEY),
-  cert: fs.readFileSync(process.env.CER)
-}, app).listen(port, () => {
-  console.log("Listening to requests on https://oakgrades.com");
-})
-// HTTP REDIRECT
+// create second app and listener
 const http_app = express();
 
 http_app.get("*", (req, res) => {
@@ -615,11 +605,11 @@ http_app.listen(80, () => {
   console.log("Listening on port 80");
 });
 
-/* HTTP ONLY
+*/
+
 // define port
 const port = "80";
 
 app.listen(80, () => {
   console.log(`Listening on port ${port}!`);
 })
-*/

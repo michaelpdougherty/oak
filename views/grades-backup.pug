@@ -60,13 +60,15 @@ block layout-content
                 td= ftch
         - n++
     div.NavButtons
+      //
+        a(href="/grades")
+          div.NavButton Change View
       a(href="/logout")
         div.NavButton Log Out
-  - let count = 0
-  - let maxCount = user.assignments.length
   each val in user.json
     div.View
       - let fPeriod = val.period.split("(")[0]
+
       - let tchs = val.teacher.split("; ")
       - let ftch
       if tchs.length === 1
@@ -78,9 +80,13 @@ block layout-content
           - splt = i.split(", ")
           - tArr.push(`${splt[1]} ${splt[0]}`)
         - ftch = tArr.join(", ")
+
       - let fClass = val.class
       - let sClass = fClass.split(" ")
       - let avg = val.average
+      - let index = n - 1
+      if fPeriod !== "HR"
+        - index = parseInt(fPeriod) - 1
       if sClass[0][1] === "S"
         - fClass = sClass.slice(1).join(" ")
       div.mainContainer
@@ -114,9 +120,9 @@ block layout-content
       div.BigAssignmentBox
         h2.BannerThree Assignments
         div.AssignmentBox
-          if count < maxCount
-            if user.assignments[count].length > 0
-              each i in user.assignments[count]
+          if index < user.assignments.length
+            if user.assignments[index].length > 0
+              each i in user.assignments[index]
                 - let pp = parseInt(i.percentage)
                 div.Message.AssignmentMessage
                   p.AssignmentName= i.assignmentName
@@ -130,11 +136,6 @@ block layout-content
                     else
                       p.Score #{i.fraction}
                       p.Percentage
-                        if i.percentage.split("%")[0]
-                          span.highlight #{i.percentage.split("%")[0]}
-                        else
-                          span.highlight Ungraded
-                      // colors got messed up
                         if pp > 90
                           span.highlight.a #{i.percentage.split("%")[0]} A
                         else if pp > 80
@@ -160,4 +161,3 @@ block layout-content
             div(style="margin-left: auto; margin-right: auto;").Message.AssignmentMessage No assignments
       div.NavButtons
         div(onclick="expand('close')").NavButton Back
-    - count++
