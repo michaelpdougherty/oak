@@ -8,7 +8,7 @@ block layout-content
     h1.Banner.Uppercase #{user.username}
     div.FlexContainer
       - let n = 0
-      each val in user.json
+      each val in user.grades
         - let fPeriod = val.period.split("(")[0]
 
         - let tchs = val.teacher.split("; ")
@@ -64,7 +64,7 @@ block layout-content
         div.NavButton Log Out
   - let count = 0
   - let maxCount = user.assignments.length
-  each val in user.json
+  each val in user.grades
     div.View
       - let fPeriod = val.period.split("(")[0]
       - let tchs = val.teacher.split("; ")
@@ -118,42 +118,32 @@ block layout-content
             if user.assignments[count].length > 0
               each i in user.assignments[count]
                 - let pp = parseInt(i.percentage)
-                div.Message.AssignmentMessage
-                  p.AssignmentName= i.assignmentName
-                  div
-                    if i.percentage.toUpperCase() === "E"
-                      p.Percentage Exempt
-                    else if i.percentage === "Ungraded" || i.fraction === "Ungraded"
-                      p.Percentage Ungraded
-                    else if i.percentage === "Inc"
-                      p.Percentage Incomplete
-                    else
-                      p.Score #{i.fraction}
-                      p.Percentage
-                        if i.percentage.split("%")[0]
-                          span.highlight #{i.percentage.split("%")[0]}
-                        else
-                          span.highlight Ungraded
-                      // colors got messed up
-                        if pp > 90
-                          span.highlight.a #{i.percentage.split("%")[0]} A
-                        else if pp > 80
-                          span.highlight.b #{i.percentage.split("%")[0]} B
-                        else if pp > 70
-                          span.highlight.c #{i.percentage.split("%")[0]} C
-                        else if pp > 60
-                          span.highlight.d #{i.percentage.split("%")[0]} D
-                        else if !isNaN(pp)
-                          span.highlight.f #{i.percentage.split("%")[0]} F
-                        else
-                          span #{i.percentage}
-                  div
-                    if i.dateAssigned === i.dateDue
-                      p.DateAssigned= i.dateAssigned.split("/").join(".")
-                    else
-                      p.DateAssigned #{i.dateAssigned.split("/").join(".")}
-                      p.DateDue #{i.dateDue.split("/").join(".")}
-                    p.Category #{i.categoryDesc} | #{i.categoryWeight}%
+                  div.Message.AssignmentMessage
+                    p.DateDue #{i.dateDue.split("/").join(".")}
+                    p.AssignmentName= i.assignmentName
+                    div.ScoreBox
+                      if i.percentage.toUpperCase() === "E"
+                        p.Percentage Exempt
+                      else if i.percentage === "Ungraded" || i.fraction === "Ungraded"
+                        p.Percentage Ungraded
+                      else if i.percentage === "Inc"
+                        p.Percentage Incomplete
+                      else
+                        p.Percentage
+                          if pp >= 89.5
+                            span.highlight.a #{i.percentage.split("%")[0]} A
+                          else if pp >= 79.5
+                            span.highlight.b #{i.percentage.split("%")[0]} B
+                          else if pp >= 69.5
+                            span.highlight.c #{i.percentage.split("%")[0]} C
+                          else if pp >= 59.5
+                            span.highlight.d #{i.percentage.split("%")[0]} D
+                          else if !isNaN(pp)
+                            span.highlight.f #{i.percentage.split("%")[0]} F
+                          else
+                            span #{i.fraction} #{i.percentage.split("%")[0]}
+                        p.Score= i.fraction
+                    p.CategoryDesc= i.categoryDesc
             else
               div(style="margin-left: auto; margin-right: auto;").Message.AssignmentMessage No assignments
           else

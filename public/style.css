@@ -76,6 +76,10 @@ h1 {
   font-size: 30px;
 }
 
+h3 {
+  font-size: 24px;
+}
+
 h1.Brand {
   font-size: 38px;
 }
@@ -320,6 +324,7 @@ span.highlight {
 
 .highlight.f {
   background-color: red;
+  color: white;
 }
 
 .averageTd {
@@ -491,36 +496,38 @@ span.highlight {
   display: flex;
   flex-direction: column;
   wrap: nowrap;
-
-  flex-shrink: 0.5;
-
+  flex-shrink: 0.1;
   justify-content: space-between;
-
-  background: /*#F2EECB;*/#FDF6E3;
-  margin: 10px;
-  margin-bottom: 40px;
-  padding: 20px;
-
+  background: #fffbf0;/*#FDF6E3;*/
+  padding: 15px;
+  margin: 8px;
 }
-
-.DateAssigned, .DateDue {
+.DateDue {
   color: gray;
-
-  margin-bottom: 0;
-  padding-bottom: 0;
+  margin: 0;
+  padding: 0;
 }
-
-/*.Category, */.DateAssigned, .DateDue, .Score, .Percentage {
-  white-space: nowrap;
+.ScoreBox {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
 }
-
 .Score, .Percentage {
+  padding: 0px;
   text-align: center;
 }
-
-.Category {
-  margin-bottom: 0;
+.DateDue, .Score, .Percentage {
+  white-space: nowrap;
 }
+.CategoryDesc {
+  text-align: right;
+  margin: 0;
+  padding: 0;
+}
+.CategoryDesc, .DateDue, .AssignmentName {
+  font-size: 0.9em;
+}
+
 
 .BannerThree {
   font-size: 24px;

@@ -13,11 +13,19 @@ form.onsubmit = (event) => {
     window.location="https://oakgrades.com/?err=Please%20enter%20a%20username%20and%20password"
   }
   if (!form.disabled) {
-    header.innerHTML = "Please Wait...";
     go.style.display = "none";
     if (err) { err.style.display = "none"; }
     form.disabled = true;
     usernameInput.readOnly = true;
     passwordInput.readOnly = true;
   }
-};
+
+  //startStopwatch(Date.now());
+}
+function startStopwatch(offset) {
+  let delta;
+  setInterval(() => {
+    delta = Date.now() - offset;
+    header.innerHTML = delta / 1000;
+  }, 1)
+}

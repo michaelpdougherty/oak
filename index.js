@@ -79,7 +79,6 @@ const assignmentKeys = [
   "dateAssigned",
   "dateDue",
   "categoryDesc",
-  "categoryWeight",
   "altAssignmentName",
   "longScore",
   "percentage",
@@ -127,7 +126,7 @@ app.use((req, res, next) => {
       username: "",
       password: "",
       loggedIn: false,
-      json: [],
+      grades: [],
       assignments: [],
       tabIndex: 0
     };
@@ -145,7 +144,7 @@ let browserInUse = false;
 
 async function pushPage () {
   let i = pages.length
-  await browsers.push(await puppeteer.launch({ headless: false, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+  await browsers.push(await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
   await pages.push(await browsers[i].newPage())
   await pages[i].emulate(iPhone)
   await pages[i].goto(LOGIN_URL, { waitUntil: "domcontentloaded" })
@@ -161,7 +160,6 @@ pushPage()
 // welcome page
 app.get("/", (req, res) => {
   let user = req.session.user;
-
   // check for authentication
   if (user.loggedIn) {
     // user is logged in
@@ -326,7 +324,7 @@ async function fetchGrades(user) {
     // begin timer
     console.time("Fetched grades!")
 
-    // init json
+    // init grades json
     let mobileJSON = []
     let currentIndex = user.tabIndex
 
@@ -360,7 +358,7 @@ async function fetchGrades(user) {
     })
 
     // get desktop site
-    let json = []
+    let grades = []
 
     // go to assignments page, ignoring what I think is a PDF err
     try {
@@ -372,7 +370,7 @@ async function fetchGrades(user) {
     $ = await cheerio.load(await pages[currentIndex].content());
     await $("#dataGrid .listCell").each(function(i, el) {
       // push new row to json
-      json.push({})
+      grades.push({})
 
       // starting at -1 to avoid header row
       index = -1
@@ -383,10 +381,10 @@ async function fetchGrades(user) {
           let data = ts.trimString(cell.text())
           if (data) {
             // insert data into json
-            json[row][keys[index]] = data
+            grades[row][keys[index]] = data
           } else {
             // pass over empty cells
-            json[row][keys[index]] = ""
+            grades[row][keys[index]] = ""
           }
         }
         index++
@@ -395,16 +393,16 @@ async function fetchGrades(user) {
     })
 
     // edit averages from mobileJSON
-    for (let i = 0; i < json.length; i++) {
+    for (let i = 0; i < grades.length; i++) {
       // find average from current class
       let mobileClass = mobileJSON.find(function(el) {
-        return el["class"] == json[i]["class"]
+        return el["class"] == grades[i]["class"]
       })
-      json[i]["average"] = mobileClass["average"]
+      grades[i]["average"] = mobileClass["average"]
     }
 
     // add grades to session and log
-    user.json = json
+    user.grades = grades
     console.timeEnd("Fetched grades!")
   }
 }
@@ -436,7 +434,7 @@ async function fetchAssignments(user) {
 
 
     // iterate over all classes
-    for (let i = 0; i < user.json.length - 1; i++) {
+    for (let i = 0; i < user.grades.length - 1; i++) {
       $ = await cheerio.load(await pages[currentIndex].content())
       row = 0, index = 0
       await assignments.push([])
@@ -452,7 +450,7 @@ async function fetchAssignments(user) {
           // empty row if page reads as such
           if (data == "No matching records") {
             assignments[classNum] = []
-          } else if (assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < 11) {
+          } else if (assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < assignmentKeys.length) {
             // otherwise, insert data into json
             assignments[classNum][row][assignmentKeys[index]] = data
           }
