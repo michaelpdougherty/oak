@@ -702,5 +702,5 @@ MigrationBackup/
 # SSL
 .certs/
 .well-known/
-.env-copy
-dump.rdb
+.logs/
+.env

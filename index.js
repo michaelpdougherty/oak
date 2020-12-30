@@ -12,7 +12,6 @@ const fs = require("fs")
 const https = require("https")
 const path = require("path")
 const puppeteer = require("puppeteer")
-const redis = require("redis")
 const session = require("express-session")
 const sleep = require('util').promisify(setTimeout)
 const ts = require('./trimString')
@@ -38,8 +37,8 @@ const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'user-log' },
   transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' })
+    new winston.transports.File({ filename: '.logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: '.logs/combined.log' })
   ]
 });
 
@@ -90,10 +89,6 @@ const assignmentKeys = [
   "totalScore"
 ]
 
-// session store
-let RedisStore = require("connect-redis")(session)
-let client = redis.createClient()
-
 // last login variable
 let lastLoginTime = Date.now()
 
@@ -114,7 +109,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // config express-session
 app.use(session({
-  store: new RedisStore({ client }),
   genid: function(req) {
     return uuidv1() // use UUIDs for session IDs
   },
