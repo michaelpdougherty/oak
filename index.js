@@ -112,7 +112,7 @@ app.use(session({
   genid: function(req) {
     return uuidv1() // use UUIDs for session IDs
   },
-  secret: 'fy7e89afe798wa',
+  secret: process.env.SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: {
@@ -562,32 +562,7 @@ async function fetchAssignments(user) {
 }
 
 /*
-// Format data
-function formatClassName(name) {
-  //
-}
-*/
-
-/*
  * Server Activation
-*/
-
-// define port
-//const port = process.env.PORT || "8000";
-// begin server with https certs or not, depending on environment
-/*
-if (process.env.NODE_ENV == "production") {
-  https.createServer({
-    key: fs.readFileSync(process.env.KEY),
-    cert: fs.readFileSync(process.env.CER)
-  }, app).listen(port, () => {
-    console.log("Listening to requests on https://oakgrades.com");
-  })
-} else {
-  app.listen(port, () => {
-    console.log(`Listening to requests on http://localhost:${port}`);
-  });
-}
 */
 
 // HTTPS SERVER
@@ -596,24 +571,14 @@ https.createServer({
   key: fs.readFileSync(process.env.KEY),
   cert: fs.readFileSync(process.env.CER)
 }, app).listen(port, () => {
-  console.log("Listening to requests on https://oakgrades.com");
+  console.log("Server is running at https://oakgrades.com");
 })
+
 // HTTP REDIRECT
 const http_app = express();
-
+http_app.listen(80, () => {
+  console.log("HTTP -> HTTPS enabled");
+});
 http_app.get("*", (req, res) => {
   res.redirect("https://" + req.headers.host + req.url);
 });
-
-http_app.listen(80, () => {
-  console.log("Listening on port 80");
-});
-
-/* HTTP ONLY
-// define port
-const port = "80";
-
-app.listen(80, () => {
-  console.log(`Listening on port ${port}!`);
-})
-*/
