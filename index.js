@@ -18,11 +18,16 @@ const ts = require('./trimString')
 const uuidv1 = require("uuid/v1")
 const winston = require("winston")
 
+
 /**
  * App Variables
  */
 
 const app = express();
+
+// set encryption key
+var key = process.env.EKEY;
+var encryptor = require('simple-encryptor')(key);
 
 // initialize logger
 const logger = winston.createLogger({
@@ -128,7 +133,8 @@ app.use((req, res, next) => {
       loggedIn: false,
       grades: [],
       assignments: [],
-      tabIndex: 0
+      tabIndex: 0,
+      customURL: ""
     };
   }
   next();
@@ -163,7 +169,6 @@ app.get("/", (req, res) => {
   // check for authentication
   if (user.loggedIn) {
     // user is logged in
-    //res.render("index", { title: "Home", user: user });
     res.render("grades", { title: "Grades", user: user })
   } else {
     // redirect to login
@@ -175,8 +180,60 @@ app.get("/", (req, res) => {
   }
 });
 
+// login handler (url)
+app.get("/login", async (req, res) => {
+  let user = req.session.user;
+  if (!user.loggedIn) {
+    // ensure minimum delay between logins (may be unnecessary)
+    let currentTime = await Date.now()
+    if (currentTime - lastLoginTime < 3000) {
+      console.time("Slept for")
+      await sleep(3000)
+      console.timeEnd("Slept for")
+    }
+    // update login time
+    lastLoginTime = currentTime
 
-// login handler
+    // get login info
+    user.username = req.query.username
+    user.password = await encryptor.decrypt(req.query.password)
+
+    if (user.username && user.password) {
+      // save login to session
+      //let user = req.session.user
+      try {
+        // authorize login
+        await auth(req.session.user);
+        if (!user.loggedIn) {
+          await res.redirect(`/?err=${"Invalid username and/or password"}`)
+        } else {
+          // get user grades and save them to the session
+          await fetchGrades(user);
+          // get user assignments and save them to the session
+          await fetchAssignments(user);
+          // save URL to user
+          await customURL(user);
+          // redirect to home
+          //await res.redirect("/");
+          res.render("grades", { title: "Grades", user: user })
+        }
+      } catch (err) {
+        // log any errors
+        console.log(err)
+      }
+    } else {
+      // show err and redirect
+      let err = "Please enter a username and password"
+      console.log(err)
+      res.redirect(`/?err=${err}`)
+    }
+  } else {
+    // just change url
+    res.render("grades", { title: "Grades", user: user })
+  }
+})
+
+// login handler (form)
 app.post("/login", async (req, res) => {
   // ensure minimum delay between logins (may be unnecessary)
   let currentTime = await Date.now()
@@ -208,8 +265,10 @@ app.post("/login", async (req, res) => {
         await fetchGrades(user);
         // get user assignments and save them to the session
         await fetchAssignments(user);
-        //await req.session.save();
-        await res.redirect("/");
+        // save URL to user
+        await customURL(user);
+        // redirect to home
+        await res.redirect(user.customURL);
       }
     } catch (err) {
       // log any errors
@@ -245,12 +304,18 @@ app.get("/logout", (req, res) => {
 app.get("/grades", (req, res) => {
   res.redirect("/");
 })
-app.get("/login", (req, res) => {
-  res.redirect("/")
-})
 app.get("/blog", (req, res) => {
   res.redirect("/")
 });
+
+async function customURL(user) {
+  // only run if user was logged in successfully
+  if (user.loggedIn) {
+    let encryptedPassword = encryptor.encrypt(user.password)
+    user.customURL = `${process.env.DOMAIN}/login?username=${user.username}&password=${encryptedPassword}`;
+    //console.log("Custom URL", user.customURL);
+  }
+}
 
 // function to authorize user login and begin session
 async function auth(user) {
