@@ -386,9 +386,6 @@ async function auth(user) {
 async function fetchGrades(user) {
   // only run if user was logged in successfully
   if (user.loggedIn) {
-    // begin timer
-    console.time("Fetched grades!")
-
     // init grades json
     let mobileJSON = []
     let currentIndex = user.tabIndex
@@ -421,14 +418,15 @@ async function fetchGrades(user) {
       })
       row++
     })
-
     // get desktop site
     let grades = []
 
     // go to assignments page, ignoring what I think is a PDF err
     try {
       await pages[currentIndex].goto(ACADEMICS_URL, { waitUntil: "domcontentloaded" })
-    } catch (err) {}
+    } catch (err) {
+      console.log(err)
+    }
 
     // iterate over rows and columns in desktop page
     row = 0, index = 0
@@ -468,7 +466,7 @@ async function fetchGrades(user) {
 
     // add grades to session and log
     user.grades = grades
-    console.timeEnd("Fetched grades!")
+    //console.timeEnd("Fetched grades!")
   }
 }
 
@@ -477,7 +475,7 @@ async function fetchAssignments(user) {
   // only run if user is logged in
   if (user.loggedIn) {
     // begin timer
-    console.time("Fetched assignments!")
+    //console.time("Fetched assignments!")
 
     // get index of current page
     let currentIndex = user.tabIndex
@@ -536,7 +534,7 @@ async function fetchAssignments(user) {
 
     // add assignments to session and log
     user.assignments = assignments
-    console.timeEnd("Fetched assignments!")
+    //console.timeEnd("Fetched assignments!")
 
     // close browser window on completion if add'l ones were opened
     if (currentIndex != 0) {
