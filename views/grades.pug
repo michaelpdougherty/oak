@@ -4,8 +4,11 @@ block script
     script(src="/grades.js")
 
 block layout-content
-  div.View.WelcomeView(id="cardsView")
-    h1.Banner.Uppercase #{user.username}
+  div.View.MainView(id="cardsView")
+    div.Banner
+      a(href="/logout")
+        img(src="logout.svg").LogoutButton
+      h1.Username.Uppercase #{user.username}
     div.FlexContainer
       - let n = 0
       each val in user.grades
@@ -59,9 +62,6 @@ block layout-content
               if val.teacher
                 td= ftch
         - n++
-    div.NavButtons
-      a(href="/logout")
-        div.NavButton Log Out
   - let count = 0
   - let maxCount = user.assignments.length
   each val in user.grades
@@ -112,7 +112,6 @@ block layout-content
               else if avg
                 span.highlight.f #{avg} F
       div.BigAssignmentBox
-        h2.BannerThree Assignments
         div.AssignmentBox
           if count < maxCount
             if user.assignments[count].length > 0
