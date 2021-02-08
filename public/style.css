@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css?family=Raleway:600|Merriweather+Sans|Share+Tech+Mono");
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
 
 ::-webkit-scrollbar {
     width: 10px;
@@ -145,12 +146,28 @@ h1.Brand {
   padding-top: 5px;
 }
 
-.LogoutButton {
-  height: 20px;
-  width: 20px;
+.LogoutButton, .RefreshButton {
   position: fixed;
+  height: 18px;
+  width: 18px;
   top: 8px;
-  left: 15px;
+}
+
+.LogoutButton {
+  left: 10px;
+}
+
+.RefreshButton {
+  right: 10px;
+}
+
+#timestamp {
+  position: fixed;
+  color: black;
+  font-family: "Open Sans";
+  font-size: 12px;
+  top: 9px;
+  right: 32px;
 }
 
 .Message {
@@ -581,16 +598,35 @@ td {
     max-width: 450px;
     max-height: 210px;
     */
+    flex-shrink: 1;
     max-width: 300px;
-    max-height: 300px;
   }
 
   .FlexContainer {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: flex-start;
-    margin-top: 10px;
+    align-items: center;
+    margin-top: 15px;
     padding: 0;
+  }
+
+  .Banner h1 {
+    font-size: 30px;
+  }
+  .LogoutButton, .RefreshButton {
+    height: 24px;
+    width: 24px;
+  }
+  .LogoutButton { 
+    left: 10px;
+  }
+  .RefreshButton {
+    right: 10px;
+  }
+  #timestamp {
+    font-size: 18px;
+    top: 7px;
+    right: 40px;
   }
 }

@@ -9,6 +9,9 @@ block layout-content
       a(href="/logout")
         img(src="logout.svg").LogoutButton
       h1.Username.Uppercase #{user.username}
+      p(id="timestamp")= user.time
+      a(href="/refresh")
+        img(src="refresh.png").RefreshButton
     div.FlexContainer
       - let n = 0
       each val in user.grades

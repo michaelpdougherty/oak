@@ -134,7 +134,8 @@ app.use((req, res, next) => {
       grades: [],
       assignments: [],
       tabIndex: 0,
-      customURL: ""
+      customURL: "",
+      time: ""
     };
   }
   next();
@@ -152,6 +153,7 @@ async function pushPage () {
   let i = pages.length
   await browsers.push(await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
   await pages.push(await browsers[i].newPage())
+  //await pages[i].setDefaultTimeout(15000)
   await pages[i].emulate(iPhone)
   await pages[i].goto(LOGIN_URL, { waitUntil: "domcontentloaded" })
   return i
@@ -281,6 +283,50 @@ app.post("/login", async (req, res) => {
     res.redirect(`/?err=${err}`)
   }
 });
+
+// refresh
+app.get("/refresh", async (req, res) => {
+  // ensure minimum delay between logins (may be unnecessary)
+  let currentTime = await Date.now()
+  if (currentTime - lastLoginTime < 3000) {
+    console.time("Slept for")
+    await sleep(3000)
+    console.timeEnd("Slept for")
+  }
+  // update login time
+  lastLoginTime = currentTime
+
+  // get user
+  let user = req.session.user
+
+  // ensure username and password are given
+  if (user.username && user.password) {
+    try {
+      // authorize login
+      await auth(user);
+      if (!user.loggedIn) {
+        await res.redirect(`/?err=${"Invalid username and/or password"}`)
+      } else {
+        // get user grades and save them to the session
+        await fetchGrades(user);
+        // get user assignments and save them to the session
+        await fetchAssignments(user);
+        // save URL to user
+        await customURL(user);
+        // redirect to home
+        await res.redirect(user.customURL);
+      }
+    } catch (err) {
+      // log any errors
+      console.log(err)
+    }
+  } else {
+    // show err and redirect
+    let err = "Please enter a username and password"
+    console.log(err)
+    res.redirect(`/?err=${err}`)
+  }
+})
 
 
 // contact
@@ -502,25 +548,34 @@ async function fetchAssignments(user) {
       row = 0, index = 0
       await assignments.push([])
 
-      // iterate over rows and columns in table
-      await $(".listCell").each(function(i, el) {
-        index = 0
-        assignments[classNum].push({})
-        let gridRow = $(this)
-        $("td", gridRow).each(function(i, el) {
-          let cell = $(this)
-          let data = ts.trimString(cell.text())
-          // empty row if page reads as such
-          if (data == "No matching records") {
-            assignments[classNum] = []
-          } else if (assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < assignmentKeys.length) {
-            // otherwise, insert data into json
-            assignments[classNum][row][assignmentKeys[index]] = data
-          }
-          index++
+      // while button not disabled
+      //while (!(await pages[currentIndex].$('#topnextPageButton').disabled)) {
+        // iterate over rows and columns in table
+        await $(".listCell").each(function(i, el) {
+          index = 0
+          assignments[classNum].push({})
+          let gridRow = $(this)
+          $("td", gridRow).each(function(i, el) {
+            let cell = $(this)
+            let data = ts.trimString(cell.text())
+            // empty row if page reads as such
+            if (data == "No matching records") {
+              assignments[classNum] = []
+            } else if (assignmentKeys[index] !== "checkbox" && assignmentKeys[index] !== "altAssignmentName" && assignmentKeys[index] !== "longScore" && index < assignmentKeys.length) {
+              // otherwise, insert data into json
+              assignments[classNum][row][assignmentKeys[index]] = data
+            }
+            index++
+          })
+          row++
         })
-        row++
-      })
+        /*
+        // click next page button
+        await Promise.all([
+          pages[currentIndex].click('#topnextPageButton'),
+          pages[currentIndex].waitForNavigation({ waitUntil: 'domcontentloaded'}),
+        ])*/
+      //}
       classNum++
 
       // get next page and wait for navigation
@@ -534,6 +589,28 @@ async function fetchAssignments(user) {
 
     // add assignments to session and log
     user.assignments = assignments
+
+    // add time to user
+    let now = new Date();
+    let meridian = "AM";
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+    // noon
+    if (hours >= 12) {
+      meridian = "PM";
+    }
+    // midnight
+    if (hours == 0) {hours = 12}
+    if (hours > 12) {
+      hours -= 12;
+    }
+
+    if (minutes < 10) {
+      minutes = `0${minutes}`
+    }
+    let time = `${hours}:${minutes} ${meridian}`;
+    user.time = time;
+    console.log("Time:", time);
     //console.timeEnd("Fetched assignments!")
 
     // close browser window on completion if add'l ones were opened
