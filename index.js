@@ -14,7 +14,7 @@ const path = require("path")
 const puppeteer = require("puppeteer")
 const session = require("express-session")
 const sleep = require('util').promisify(setTimeout)
-const ts = require('./trimString')
+const ts = require('/home/mike/github/oak/trimString')
 const uuidv1 = require("uuid/v1")
 const winston = require("winston")
 
@@ -625,22 +625,16 @@ async function fetchAssignments(user) {
   }
 }
 
-/*
- * Server Activation
-*/
-
+/* Server Activation */
 // HTTPS SERVER
-const port = "443";
-https.createServer({
-  key: fs.readFileSync(process.env.KEY),
-  cert: fs.readFileSync(process.env.CER)
-}, app).listen(port, () => {
-  console.log(`Server is running at ${process.env.DOMAIN}`);
+const oakHTTPS = process.env.PORT_HTTPS;
+app.listen(oakHTTPS, () => {
+  console.log(`Listening on HTTPS port ${oakHTTPS}`);
 })
-
 // HTTP REDIRECT
+const oakHTTP = process.env.PORT_HTTP;
 const http_app = express();
-http_app.listen(80, () => {
+http_app.listen(oakHTTP, () => {
   console.log("HTTP -> HTTPS enabled");
 });
 http_app.get("*", (req, res) => {
