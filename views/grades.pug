@@ -7,12 +7,14 @@ block layout-content
   div.View.MainView(id="cardsView")
     div.Banner
       a(href="/logout")
-        img(src="logout.svg").LogoutButton
+        img(src="blackxicon.jpg").LogoutButton
       h1.Username.Uppercase #{user.username}
       p(id="timestamp")= user.time
-      a(href="/refresh")
+      a(href=user.customURL)
         img(src="refresh.png").RefreshButton
     div.FlexContainer
+      div.FlexItem.Message.PhotoDiv
+        img(src=user.photoUrl)
       - let n = 0
       each val in user.grades
         - let fPeriod = val.period.split("(")[0]
@@ -35,9 +37,9 @@ block layout-content
         if sClass[0][1] === "S"
           - fClass = sClass.slice(1).join(" ")
         - let redir = `expand(${n})`
-        div.FlexItem.Message(onclick=redir)
+        div.FlexItem.Message.ClassMessage.Clickable(onclick=redir)
           table.table.FlexTable.FlexTableTop
-            tr.FlexHeadingRow
+            tr.FlexHeadingRow.MessageTopRow
               td.FlexHeading Period
               td.FlexHeading Room
               td.FlexHeading Absences
@@ -47,23 +49,19 @@ block layout-content
               td.FlexHeadingBottom= val.room
               td.FlexHeadingBottom= val.absences
               td.FlexHeadingBottom= val.tardies
-          table.table.FlexTable.FlexTableBottom
-            tr
-              td= fClass
-              td(rowspan=2).Avg
-                if avg >= 90
-                  span.highlight.a= `${avg} A`
-                else if avg >= 80
-                  span.highlight.b= `${avg} B`
-                else if avg >= 70
-                  span.highlight.c= `${avg} C`
-                else if avg >= 60
-                  span.highlight.d= `${avg} D`
-                else if avg
-                  span.highlight.f= `${avg} F`
-            tr
-              if val.teacher
-                td= ftch
+          div.ClassNameDiv
+            p.ClassName= fClass
+            p.Avg.MessageAvg
+              if avg >= 90
+                span.highlight.a= `${avg} A`
+              else if avg >= 80
+                span.highlight.b= `${avg} B`
+              else if avg >= 70
+                span.highlight.c= `${avg} C`
+              else if avg >= 60
+                span.highlight.d= `${avg} D`
+              else if avg
+                span.highlight.f= `${avg} F`
         - n++
   - let count = 0
   - let maxCount = user.assignments.length

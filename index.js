@@ -57,6 +57,7 @@ logger.add(new winston.transports.Console({
 // URLs for scraping
 const LOGIN_URL = "https://aspen.cps.edu/aspen/logon.do"
 const ACADEMICS_URL = "https://aspen.cps.edu/aspen/portalClassList.do?navkey=academics.classes.list"
+const MY_INFO_URL = "https://aspen.cps.edu/aspen/portalStudentDetail.do?navkey=myInfo.details.detail"
 const gradesExt = "list/academics.classes.list"
 const fullSiteExt = "redirect?page=fullsite"
 
@@ -135,6 +136,7 @@ app.use((req, res, next) => {
       assignments: [],
       tabIndex: 0,
       customURL: "",
+      photoUrl: "",
       time: ""
     };
   }
@@ -151,7 +153,7 @@ let browserInUse = false;
 
 async function pushPage () {
   let i = pages.length
-  await browsers.push(await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+  await browsers.push(await puppeteer.launch({ headless: false, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
   await pages.push(await browsers[i].newPage())
   //await pages[i].setDefaultTimeout(15000)
   await pages[i].emulate(iPhone)
@@ -270,6 +272,7 @@ app.post("/login", async (req, res) => {
         // save URL to user
         await customURL(user);
         // redirect to home
+        await console.log(user);
         await res.redirect(user.customURL);
       }
     } catch (err) {
@@ -283,51 +286,6 @@ app.post("/login", async (req, res) => {
     res.redirect(`/?err=${err}`)
   }
 });
-
-// refresh
-app.get("/refresh", async (req, res) => {
-  // ensure minimum delay between logins (may be unnecessary)
-  let currentTime = await Date.now()
-  if (currentTime - lastLoginTime < 3000) {
-    console.time("Slept for")
-    await sleep(3000)
-    console.timeEnd("Slept for")
-  }
-  // update login time
-  lastLoginTime = currentTime
-
-  // get user
-  let user = req.session.user
-
-  // ensure username and password are given
-  if (user.username && user.password) {
-    try {
-      // authorize login
-      await auth(user);
-      if (!user.loggedIn) {
-        await res.redirect(`/?err=${"Invalid username and/or password"}`)
-      } else {
-        // get user grades and save them to the session
-        await fetchGrades(user);
-        // get user assignments and save them to the session
-        await fetchAssignments(user);
-        // save URL to user
-        await customURL(user);
-        // redirect to home
-        await res.redirect(user.customURL);
-      }
-    } catch (err) {
-      // log any errors
-      console.log(err)
-    }
-  } else {
-    // show err and redirect
-    let err = "Please enter a username and password"
-    console.log(err)
-    res.redirect(`/?err=${err}`)
-  }
-})
-
 
 // contact
 app.get("/contact", (req, res) => {
@@ -613,7 +571,20 @@ async function fetchAssignments(user) {
     console.log("Time:", time);
     //console.timeEnd("Fetched assignments!")
 
-    // close browser window on completion if add'l ones were opened
+    await  pages[currentIndex].goto(MY_INFO_URL, { waitUntil: "networkidle0" });
+    // grab photo URL
+    await Promise.all([
+      pages[currentIndex].click('td.templateTabNotSelected:nth-child(4)'),
+      pages[currentIndex].waitForNavigation({ waitUntil: 'domcontentloaded' }),
+    ]);
+
+    user.photoUrl = await pages[currentIndex].evaluate(() => {
+      return document.querySelector('.templateTextSmall span img').src
+  
+    })
+
+
+     // close browser window on completion if add'l ones were opened
     if (currentIndex != 0) {
       await pages[currentIndex].close()
       await browsers[currentIndex].close()

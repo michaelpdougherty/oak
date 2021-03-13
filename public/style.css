@@ -422,11 +422,17 @@ span.highlight {
 .FlexItem {
   margin: 5px;
   padding: 15px;
-  padding-bottom: 5px !important;
+  /*padding-bottom: 5px !important;*/
   width: 100%;
 
   flex-shrink: 0;
 }
+
+/*
+.FlexItem > .Message {
+  margin-top: 0 !important;
+}
+*/
 
 @media only screen and (min-width: 600px) {
   .FlexItem {
@@ -435,41 +441,53 @@ span.highlight {
   }
 }
 
-.FlexItem:hover {
+.Clickable {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+.Clickable:hover {
   cursor: pointer;
   background-color: rgba(255, 255, 255, 0.9);
 }
 
+.PhotoDiv img {
+  width: 100%;
+}
+
+.ClassMessage {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+.MessageTopRow, .MessageTopRow td {
+  border-top: none !important;
+}
+
 .FlexTable {
   text-align: center;
+  margin-top: 0;
 }
-
 .FlexTableTop {
   margin-bottom: 0;
+  margin: 4px;
 }
-
 .FlexTableBottom {
   margin-bottom: 0;
 }
+
+
 
 .FlexHeading {
   font-size: 12px;
   color: gray;
 }
-
 .FlexHeadingRow, .FlexHeading {
-  border-bottom: none !important;
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
+  border-bottom: none !important;
 }
-
 .FlexHeadingRowBottom, .FlexHeadingBottom {
-  border-top: none !important;
   margin-top: 0 !important;
   padding-top: 0 !important;
-}
-
-.ClassTitleRow {
   border-top: none !important;
 }
 
@@ -479,10 +497,21 @@ span.highlight {
   white-space: nowrap;
 }
 
+.ClassNameDiv {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 0 !important;
+  padding: 0px 10px;
+}
+
+.MessageAvg {
+  text-align: right;
+}
 td {
   font-size: 15px;
 }
-
 .BannerTwo {
   font-size: 24px;
   display: flex;
@@ -599,7 +628,7 @@ td {
     max-height: 210px;
     */
     flex-shrink: 1;
-    max-width: 300px;
+    max-width: 400px;
   }
 
   .FlexContainer {
