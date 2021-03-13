@@ -153,7 +153,7 @@ let browserInUse = false;
 
 async function pushPage () {
   let i = pages.length
-  await browsers.push(await puppeteer.launch({ headless: false, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+  await browsers.push(await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
   await pages.push(await browsers[i].newPage())
   //await pages[i].setDefaultTimeout(15000)
   await pages[i].emulate(iPhone)
@@ -272,7 +272,7 @@ app.post("/login", async (req, res) => {
         // save URL to user
         await customURL(user);
         // redirect to home
-        await console.log(user);
+        //await console.log(user);
         await res.redirect(user.customURL);
       }
     } catch (err) {
@@ -571,6 +571,7 @@ async function fetchAssignments(user) {
     console.log("Time:", time);
     //console.timeEnd("Fetched assignments!")
 
+    /* GET PHOTO 
     await  pages[currentIndex].goto(MY_INFO_URL, { waitUntil: "networkidle0" });
     // grab photo URL
     await Promise.all([
@@ -582,6 +583,7 @@ async function fetchAssignments(user) {
       return document.querySelector('.templateTextSmall span img').src
   
     })
+    */
 
 
      // close browser window on completion if add'l ones were opened

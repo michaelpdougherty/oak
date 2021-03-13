@@ -29,11 +29,6 @@
 
   --highlight: #4b8b3b;
   --highlight-secondary: #BBBE64;
-
-  --ui-shawdow: 0 2px 4px -1px rgba(0, 0, 0, 0.06),
-    0 4px 5px 0 rgba(0, 0, 0, 0.06), 0 1px 10px 0 rgba(0, 0, 0, 0.08);
-  fill: rgba(0, 0, 0, 0.54);
-  --ui-shawdow-border: 1px solid rgba(0, 0, 0, 0.14);
 }
 
 * {
@@ -136,8 +131,6 @@ h1.Brand {
   width: 100%;
   margin: 0;
   padding: 0;
-  border-bottom: var(--ui-shawdow-border);
-  box-shadow: var(--ui-shawdow);
   z-index: 1;
 }
 
@@ -173,9 +166,11 @@ h1.Brand {
 .Message {
   background: white;
   padding: 30px;
-  border-bottom: var(--ui-shawdow-border);
-  box-shadow: var(--ui-shawdow);
-  border-radius: 3px;
+  border-radius: 2px;
+
+  -moz-box-shadow: inset 0 0 10px gainsboro;
+  -webkit-box-shadow: inset 0 0 10px gainsboro;
+  box-shadow: inset 0 0 10px gainsboro;
 }
 
 .LoginMessage {
@@ -246,8 +241,7 @@ h1.Brand {
 
   text-transform: capitalize;
 
-  border: var(--ui-shawdow-border);
-  box-shadow: var(--ui-shawdow);
+  border: none;
 }
 
 .NavButton:hover {
@@ -450,10 +444,17 @@ span.highlight {
   background-color: rgba(255, 255, 255, 0.9);
 }
 
-.PhotoDiv img {
-  width: 100%;
+.PhotoDiv {
+  width: 100vw;
+  border-radius: 0;
+  display: flex;
+  justify-content: center;
 }
 
+.PhotoDiv img {
+  width: 50%;
+  height: 50%;
+}
 .ClassMessage {
   margin-top: 0 !important;
   padding-top: 0 !important;
@@ -627,8 +628,9 @@ td {
     max-width: 450px;
     max-height: 210px;
     */
-    flex-shrink: 1;
+    flex-shrink: 0;
     max-width: 400px;
+    height: 140px;
   }
 
   .FlexContainer {

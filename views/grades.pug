@@ -13,8 +13,9 @@ block layout-content
       a(href=user.customURL)
         img(src="refresh.png").RefreshButton
     div.FlexContainer
-      div.FlexItem.Message.PhotoDiv
-        img(src=user.photoUrl)
+      //
+        div.FlexItem.Message.PhotoDiv
+          img(src=user.photoUrl)
       - let n = 0
       each val in user.grades
         - let fPeriod = val.period.split("(")[0]
