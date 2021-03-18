@@ -139,20 +139,6 @@ h1.Brand {
   padding-top: 5px;
 }
 
-.LogoutButton, .RefreshButton {
-  position: fixed;
-  height: 18px;
-  width: 18px;
-  top: 8px;
-}
-
-.LogoutButton {
-  left: 10px;
-}
-
-.RefreshButton {
-  right: 10px;
-}
 
 #timestamp {
   position: fixed;
@@ -255,7 +241,6 @@ h1.Brand {
 .MainView {
   background: url("oak.jpg") right top;
   background-size: cover;
-  /*background-color: #4D9B4F;*/
 }
 
 .flex-col {
@@ -359,11 +344,6 @@ span.highlight {
   td:first-child {
     padding-right: 0;
   }
-  /*
-  .WelcomeView {
-    background: url("oakMobile.jpg") right top;
-  }
-  */
 }
 
 @media only screen and (max-width: 900px) {
@@ -410,7 +390,9 @@ span.highlight {
 
   width: 100vw;
 
-  padding: 0 10%;
+  padding: 0 3%;
+  margin: 0;
+  padding-top: 5px;
 }
 
 .FlexItem {
@@ -422,11 +404,6 @@ span.highlight {
   flex-shrink: 0;
 }
 
-/*
-.FlexItem > .Message {
-  margin-top: 0 !important;
-}
-*/
 
 @media only screen and (min-width: 600px) {
   .FlexItem {
@@ -521,6 +498,7 @@ td {
   padding: 5px;
   margin: 10px;
   z-index: 1;
+  min-width: 50vw;
 }
 
 .BigAssignmentBox {
@@ -622,12 +600,24 @@ td {
   padding-top: 0;
 }
 
+/* ICONS */
+.LogoutButton {
+  position: fixed;
+  left: 5px;
+  top: 2px;
+  height: 30px;
+  width: 30px;
+}
+.RefreshButton {
+  position: fixed;
+  right: 10px;
+  top: 10px;
+  height: 15px;
+  width: 15px;
+}
+
 @media screen and (min-width: 800px) {
   .FlexContainer .Message {
-    /*
-    max-width: 450px;
-    max-height: 210px;
-    */
     flex-shrink: 0;
     max-width: 400px;
     height: 140px;
@@ -638,22 +628,28 @@ td {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    /*
     margin-top: 15px;
     padding: 0;
+    */
   }
 
   .Banner h1 {
     font-size: 30px;
   }
-  .LogoutButton, .RefreshButton {
-    height: 24px;
-    width: 24px;
-  }
-  .LogoutButton { 
-    left: 10px;
+  .LogoutButton {
+    position: fixed;
+    top: 1px;
+    left: 5px;
+    height: 40px;
+    width: 40px;
   }
   .RefreshButton {
+    position: fixed;
     right: 10px;
+    top: 10px;
+    height: 20px;
+    width: 20px;
   }
   #timestamp {
     font-size: 18px;
