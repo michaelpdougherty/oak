@@ -498,6 +498,7 @@ td {
   padding: 5px;
   margin: 10px;
   z-index: 1;
+
   min-width: 50vw;
 }
 
