@@ -153,7 +153,7 @@ let browserInUse = false;
 
 async function pushPage () {
   let i = pages.length
-  await browsers.push(await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] }))
+  await browsers.push(await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox", "--proxy-server=64.124.38.139:8080"] }))
   await pages.push(await browsers[i].newPage())
   //await pages[i].setDefaultTimeout(15000)
   await pages[i].emulate(iPhone)
@@ -202,6 +202,13 @@ app.get("/login", async (req, res) => {
     user.username = req.query.username
     user.password = await encryptor.decrypt(req.query.password)
 
+    if (user.password === null) {
+      await console.log(req.query.password ? true : false);
+     await console.log(await encryptor.decrypt(req.query.password));
+    }
+
+    await console.log(user.username, user.password);
+
     if (user.username && user.password) {
       // save login to session
       //let user = req.session.user
@@ -228,7 +235,7 @@ app.get("/login", async (req, res) => {
     } else {
       // show err and redirect
       let err = "Please enter a username and password"
-      console.log(err)
+      console.log("URL login handler error:", err)
       res.redirect(`/?err=${err}`)
     }
   } else {
@@ -273,7 +280,9 @@ app.post("/login", async (req, res) => {
         await customURL(user);
         // redirect to home
         //await console.log(user);
+        await console.log(user.customURL);
         await res.redirect(user.customURL);
+        //await res.redirect("/");
       }
     } catch (err) {
       // log any errors
@@ -282,7 +291,7 @@ app.post("/login", async (req, res) => {
   } else {
     // show err and redirect
     let err = "Please enter a username and password"
-    console.log(err)
+    console.log("Form login handler error:", err)
     res.redirect(`/?err=${err}`)
   }
 });
@@ -600,12 +609,12 @@ async function fetchAssignments(user) {
 
 /* Server Activation */
 // HTTPS SERVER
-const oakHTTPS = process.env.PORT_HTTPS;
+const oakHTTPS = process.env.PORT_HTTPS || 3001;
 app.listen(oakHTTPS, () => {
   console.log(`Listening on HTTPS port ${oakHTTPS}`);
 })
 // HTTP REDIRECT
-const oakHTTP = process.env.PORT_HTTP;
+const oakHTTP = process.env.PORT_HTTP || 3000;
 const http_app = express();
 http_app.listen(oakHTTP, () => {
   console.log("HTTP -> HTTPS enabled");
