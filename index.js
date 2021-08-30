@@ -159,7 +159,7 @@ app.use(session({
   }
 }))
 
-if (process.env.DEV) {
+if (process.env.ENV === "DEV") {
   console.log("DEV")
 } else {
   console.log("NO DEV");
@@ -177,8 +177,7 @@ app.use((req, res, next) => {
       assignments: [],
       tabIndex: 0,
       customURL: "",
-      photoUrl: "",
-      time: ""
+      photoUrl: ""
     };
   }
   next();
@@ -194,7 +193,7 @@ let browserInUse = false;
 
 async function pushPage () {
   let i = pages.length
-  await browsers.push(await puppeteer.launch({ headless: false, args: ["--no-sandbox", "--disable-setuid-sandbox", "--proxy-server=64.124.38.139:8080"] }))
+  await browsers.push(await puppeteer.launch({ headless: !(process.env.ENV === "DEV"), args: ["--no-sandbox", "--disable-setuid-sandbox", "--proxy-server=64.124.38.139:8080"] }))
   await pages.push(await browsers[i].newPage())
   //await pages[i].setDefaultTimeout(15000)
   await pages[i].emulate(iPhone)
@@ -598,28 +597,6 @@ async function fetchAssignments(user) {
     // add assignments to session and log
     user.assignments = assignments
 
-    // add time to user
-    let now = new Date();
-    let meridian = "AM";
-    let hours = now.getHours();
-    let minutes = now.getMinutes();
-    // noon
-    if (hours >= 12) {
-      meridian = "PM";
-    }
-    // midnight
-    if (hours == 0) {hours = 12}
-    if (hours > 12) {
-      hours -= 12;
-    }
-
-    if (minutes < 10) {
-      minutes = `0${minutes}`
-    }
-    let time = `${hours}:${minutes} ${meridian}`;
-    user.time = time;
-    console.log("Time:", time);
-    //console.timeEnd("Fetched assignments!")
 
     /* GET PHOTO 
     await  pages[currentIndex].goto(MY_INFO_URL, { waitUntil: "networkidle0" });
@@ -635,7 +612,6 @@ async function fetchAssignments(user) {
     })
     */
 
-
      // close browser window on completion if add'l ones were opened
     if (currentIndex != 0) {
       await pages[currentIndex].close()
@@ -650,7 +626,7 @@ async function fetchAssignments(user) {
 
 
 // HTTPS SERVER
-const FORCE_HTTPS = false;
+const FORCE_HTTPS = !(process.env.ENV === "DEV");
 const oakHTTP = process.env.PORT_HTTP || 3000;
 const oakHTTPS = process.env.PORT_HTTPS || 3001;
 
