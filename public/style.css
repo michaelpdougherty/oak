@@ -2,13 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
 
-/*
-::-webkit-scrollbar {
-    width: 10px;
-}
-*/
-
-/*
 ::-webkit-scrollbar-track {
     background-color: #ebebeb;
     -webkit-border-radius: 10px;
@@ -20,7 +13,6 @@
     border-radius: 10px;
     background: #6d6d6d;
 }
-*/
 
 :root {
   --logo-font: 'Courier Prime', monospace;
@@ -243,10 +235,18 @@ h1.Brand {
 }
 
 .MainView {
-  
-
   background: url("oak.jpg") right top;
   background-size: cover;
+}
+
+.ShowBackground {
+  background: url("oak.jpg") right top;
+  background-size: cover;
+}
+
+.mainContainer {
+  width: 100%;
+  background: white;
 }
 
 .flex-col {
@@ -402,7 +402,8 @@ span.highlight {
 }
 
 .FlexItem {
-  margin: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
   padding: 15px;
   /*padding-bottom: 5px !important;*/
   width: 100%;
@@ -542,6 +543,7 @@ td {
   padding: 15px;
   margin: 8px;
 }
+
 .DateDue {
   color: gray;
   margin: 0;
