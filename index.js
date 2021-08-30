@@ -18,12 +18,12 @@ const ts = require('./trimString')
 const uuidv1 = require("uuid/v1")
 const winston = require("winston")
 
-
+const app = express();
 /**
  * App Variables
  */
 
-const app = express();
+
 
 // set encryption key
 var key = process.env.EKEY;
@@ -110,19 +110,60 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+/*
+// REDIS
+const redis = require('redis');
+const connectRedis = require('connect-redis');
+
+// enable this if you run behind a proxy (e.g. nginx)
+//app.set('trust proxy', 1);
+const RedisStore = connectRedis(session)
+//Configure redis client
+const redisClient = redis.createClient({
+    host: 'localhost',
+    port: 3000
+})
+redisClient.on('error', function (err) {
+    console.log('Could not establish a connection with redis. ' + err);
+});
+redisClient.on('connect', function (err) {
+    console.log('Connected to redis successfully');
+});
+//Configure session middleware
+
+app.use(session({
+    store: new RedisStore({ client: redisClient }),
+    secret: 'secret$%^134',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false, // if true only transmit cookie over https
+        httpOnly: false, // if true prevent client side JS from reading the cookie 
+        maxAge: 1000 * 60 * 10 // session max age in miliseconds
+    }
+}))
+*/
+
 // config express-session
 app.use(session({
+  //store: new RedisStore({ client: redisClient }),
   genid: function(req) {
     return uuidv1() // use UUIDs for session IDs
   },
   secret: process.env.SECRET,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: true,//false?
   cookie: {
     maxAge: 100 * 60 * 1000, // 100 min
-    secure: true
+    secure: false,//true
   }
 }))
+
+if (process.env.DEV) {
+  console.log("DEV")
+} else {
+  console.log("NO DEV");
+}
 
 // initialize session
 app.use((req, res, next) => {
@@ -153,7 +194,7 @@ let browserInUse = false;
 
 async function pushPage () {
   let i = pages.length
-  await browsers.push(await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox", "--proxy-server=64.124.38.139:8080"] }))
+  await browsers.push(await puppeteer.launch({ headless: false, args: ["--no-sandbox", "--disable-setuid-sandbox", "--proxy-server=64.124.38.139:8080"] }))
   await pages.push(await browsers[i].newPage())
   //await pages[i].setDefaultTimeout(15000)
   await pages[i].emulate(iPhone)
@@ -277,12 +318,12 @@ app.post("/login", async (req, res) => {
         // get user assignments and save them to the session
         await fetchAssignments(user);
         // save URL to user
-        await customURL(user);
+        //await customURL(user);
         // redirect to home
         //await console.log(user);
-        await console.log(user.customURL);
-        await res.redirect(user.customURL);
-        //await res.redirect("/");
+        //await console.log(user.customURL);
+        //await res.redirect(user.customURL);
+        await res.redirect("/");
       }
     } catch (err) {
       // log any errors
@@ -325,7 +366,7 @@ async function customURL(user) {
   // only run if user was logged in successfully
   if (user.loggedIn) {
     let encryptedPassword = encryptor.encrypt(user.password)
-    user.customURL = `${process.env.DOMAIN}/login?username=${user.username}&password=${encryptedPassword}`;
+    user.customURL = `/login?username=${user.username}&password=${encryptedPassword}`;//`${process.env.DOMAIN}/login?username=${user.username}&password=${encryptedPassword}`;
     //console.log("Custom URL", user.customURL);
   }
 }
@@ -607,18 +648,28 @@ async function fetchAssignments(user) {
   }
 }
 
-/* Server Activation */
+
 // HTTPS SERVER
-const oakHTTPS = process.env.PORT_HTTPS || 3001;
-app.listen(oakHTTPS, () => {
-  console.log(`Listening on HTTPS port ${oakHTTPS}`);
-})
-// HTTP REDIRECT
+const FORCE_HTTPS = false;
 const oakHTTP = process.env.PORT_HTTP || 3000;
-const http_app = express();
-http_app.listen(oakHTTP, () => {
-  console.log("HTTP -> HTTPS enabled");
-});
-http_app.get("*", (req, res) => {
-  res.redirect("https://" + req.headers.host + req.url);
-});
+const oakHTTPS = process.env.PORT_HTTPS || 3001;
+
+if (FORCE_HTTPS) {
+  // listen on https port
+  app.listen(oakHTTPS, () => {
+    console.log(`Listening on HTTPS port ${oakHTTPS}`);
+  })
+  // create redirect app on http port
+  const http_app = express();
+  http_app.listen(oakHTTP, () => {
+    console.log("HTTP -> HTTPS enabled");
+  });
+  http_app.get("*", (req, res) => {
+    res.redirect("https://" + req.headers.host + req.url);
+  });
+} else {
+  // no https redirect
+  app.listen(oakHTTP, () => {
+    console.log("listening on http://localhost:3000");
+  })
+}
