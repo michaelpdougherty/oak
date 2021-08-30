@@ -703,4 +703,4 @@ MigrationBackup/
 .certs/
 .well-known/
 .logs/
-.env
+#.env
