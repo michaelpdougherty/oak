@@ -14,7 +14,7 @@ const path = require("path")
 const puppeteer = require("puppeteer")
 const session = require("express-session")
 const sleep = require('util').promisify(setTimeout)
-const ts = require('/home/mike/github/oak/trimString')
+const ts = require('./trimString')
 const uuidv1 = require("uuid/v1")
 const winston = require("winston")
 
